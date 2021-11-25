@@ -1,0 +1,37 @@
+{
+  "version": 9,
+  "randomSeed": "f8731634d5d57a05dabd714121ac9b91",
+  "graph": { "viewport": { "xmin": -10, "ymin": -10, "xmax": 10, "ymax": 10 } },
+  "expressions": {
+    "list": [
+      {
+        "hidden": true,
+        "type": "expression",
+        "id": "0",
+        "color": "#000000",
+        "latex": "a=0"
+      },
+      {
+        "hidden": true,
+        "type": "expression",
+        "id": "1",
+        "color": "#000000",
+        "latex": "m_{ain}\\left(\\right)=\\left\\{p_{c}=0:\\left(a\\to \\left(a+1\\right),p_{c}\\to \\left(p_{c}+1\\right)\\right),p_{c}=1:\\left(p_{c}\\to p_{s}\\left[\\operatorname{length}\\left(p_{s}\\right)\\right],p_{s}\\to p_{s}\\left[1...\\left(\\operatorname{length}\\left(p_{s}\\right)-1\\right)\\right]\\right)\\right\\}"
+      },
+      {
+        "hidden": true,
+        "type": "expression",
+        "id": "2",
+        "color": "#000000",
+        "latex": "p_{s}=\\left[-1\\right]"
+      },
+      {
+        "hidden": true,
+        "type": "expression",
+        "id": "3",
+        "color": "#000000",
+        "latex": "p_{c}=0"
+      }
+    ]
+  }
+}
