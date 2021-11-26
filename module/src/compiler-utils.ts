@@ -2,7 +2,7 @@ import { builtins } from "./builtins.js";
 
 export let tokenTypes: [string, RegExp][] = [
   ["string_literal", /\"[\w\W]*?\"/y],
-  ["whitespace", /\;[\w\W]*?\n/y],
+  ["whitespace", /\;[\w\W]*?$/ym],
   ["parenthesis", /[\(\)]/y],
   ["number", /\-*[0-9]*\.[0-9]+/y],
   ["number", /\-*[0-9]+/y],

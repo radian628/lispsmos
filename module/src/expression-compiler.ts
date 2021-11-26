@@ -43,6 +43,8 @@ export class ExpressionCompiler {
     let op = astList[0];
     if (op == "==") op = "=";
     if (op == "->") op = "\\to ";
+    if (op == ">=") op = "\\ge ";
+    if (op == "<=") op = "\\le ";
     let outArr = [];
     for (let astNode of astList.slice(1)) {
       outArr.push(this.astNodeToDesmosExpressions(astNode));
