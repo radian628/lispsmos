@@ -7,8 +7,27 @@ Along with most Desmos features, LISPsmos comes with builtin support for the fol
 - Macros that evaluate arbitrary JavaScript code to transform an AST (Abstract Syntax Tree).
 
 ## Features
+### Basic Usage
 ```lisp
 (= a 1) ;variable assignment
 (-> a (+ a 1)) ;actions and arithmetic operators
 (= tenDividedByFive (/ 10 5)) ;longer variable names are automatically made subscript
+```
+
+### Piecewises
+```lisp
+;Print x if x>=0, and -x if x<0. Effectively mimics the absolute value function.
+(= absoluteValue (piecewise
+    ((>= x 0) x)
+    ((< x 0) (* -1 x))
+))
+```
+
+### Macros
+```lisp
+;macro that increments a variable
+(defineFindAndReplace inc v (-> v (+ v 1)))
+(= i 0)
+;expands to (-> i (+ i 1))
+(inc i)
 ```
