@@ -70,6 +70,20 @@ export function register (c: LispsmosCompiler) {
     //console.log(astList, outToken);
     return [outToken];
   });
+
+  c.registerMacro("evalMacro", (ast, compiler): Array<ASTNode> => {
+    if (Array.isArray(ast[2])) {
+      throw new Error("LISPsmos Error: evalMacro may only be used on a string!");
+    }
+    if (Array.isArray(ast[1])) {
+      throw new Error("LISPsmos Error: evalMacro name may only be used on a string!");
+    }
+    let functionToEval = new Function("args", extractStringFromLiteral(ast[2]));
+    compiler.registerMacro(ast[1], (ast2, compiler2): Array<ASTNode> => {
+      return functionToEval(ast2);
+    });
+    return [];
+  });
 }
 
 // export let macros = {

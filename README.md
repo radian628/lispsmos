@@ -54,3 +54,10 @@ Along with most Desmos features, LISPsmos comes with builtin support for the fol
 (inc i)
 ```
 
+### JavaScript Evaluation Macros
+```lisp
+;macro that calls the following function on its arguments
+(evalMacro inc "return [['->', args[1], ['+', args[1], '1']]]")
+(= a 0)
+(inc a) ;application of the macro. All macros of this type are variadic.
+```

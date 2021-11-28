@@ -13,6 +13,7 @@
 // }
 
 export * as compiler from "./compiler.js";
+export * as compilerUtils from "./compiler-utils.js";
 //export * as proceduralMacros from "./procedural-macros"
-export * as utilityMacros from "./utility-macros.js"
-export * as proceduralMacros from "./procedural-macros.js"
+export * as utilityMacros from "./utility-macros.js";
+export * as proceduralMacros from "./procedural-macros.js";

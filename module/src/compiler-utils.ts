@@ -56,6 +56,7 @@ export type DesmosExpression = {
   collapsed?: boolean,
 
   //display properties
+  colorLatex?: string,
   lineOpacity?: string,
   lineWidth?: string,
   pointOpacity?: string,
@@ -67,7 +68,8 @@ export type DesmosExpression = {
     enabled: boolean,
     latex: string
   },
-  fill?: boolean
+  fill?: boolean,
+  lines?: boolean
 };
 
 export type DesmosState = {

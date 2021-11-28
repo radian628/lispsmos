@@ -49,5 +49,7 @@ export let builtins = [
   "ln",
   "polygon",
   "log",
-  "random"
+  "random",
+  "rgb",
+  "hsv"
 ]

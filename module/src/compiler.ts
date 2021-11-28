@@ -83,9 +83,15 @@ export class LispsmosCompiler {
   currentFolderID: number;
   desmosState: DesmosState;
   ast: ASTNode;
+  events: {
+    init: Function[];
+  }
 
   constructor () {
     this.macros = new Map();
+    this.events = {
+      init: []
+    };
   }
 
   compile(src: string): DesmosState {
@@ -100,6 +106,10 @@ export class LispsmosCompiler {
       throw new Error(`LISPsmos Error: Macro ${macroName} is already defined!`);
     }
     this.macros.set(macroName, macroFn);
+  }
+
+  registerEvent(eventName: "init", handler: Function): void {
+    this.events[eventName].push(handler);
   }
 
   compileAST(ast: ASTNode) {
@@ -266,6 +276,7 @@ export class LispsmosCompiler {
         case "lineWidth":
         case "pointOpacity":
         case "pointSize":
+        case "colorLatex":
           defaultExpression[astChild[0]] = this.expressionCompiler.astNodeToDesmosExpressions(astChild[1]);
           break;
         case "lineStyle":
@@ -289,6 +300,7 @@ export class LispsmosCompiler {
           };
           break;
         case "fill":
+        case "lines":
           defaultExpression[astChild[0]] = (astChild[1] == "true");
           break;
       }
