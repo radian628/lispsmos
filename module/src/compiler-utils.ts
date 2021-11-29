@@ -60,6 +60,7 @@ export type DesmosExpression = {
   lineOpacity?: string,
   lineWidth?: string,
   pointOpacity?: string,
+  fillOpacity?: string,
   pointSize?: string,
   lineStyle?: string,
   pointStyle?: string,

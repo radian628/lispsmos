@@ -1,0 +1,341 @@
+{
+    "version": 9,
+    "randomSeed": "f8731634d5d57a05dabd714121ac9b91",
+    "graph": {
+        "viewport": {
+            "xmin": -2,
+            "ymin": -2.3597198987348587,
+            "xmax": 2,
+            "ymax": 2.3597198987348587
+        },
+        "showGrid": false,
+        "showXAxis": false,
+        "showYAxis": false,
+        "xAxisArrowMode": "BOTH",
+        "yAxisArrowMode": "BOTH",
+        "xAxisNumbers": false,
+        "yAxisNumbers": false,
+        "polarNumbers": false,
+        "degreeMode": true,
+        "restrictGridToFirstQuadrant": true
+    },
+    "expressions": {
+        "list": [
+            {
+                "type": "folder",
+                "id": "0",
+                "title": "3D Transformations",
+                "collapsed": true
+            },
+            {
+                "type": "expression",
+                "id": "1",
+                "folderId": "0",
+                "color": "#000000",
+                "latex": "w_{indingOrderContribution}\\left(p_{1},p_{2}\\right)=\\left(\\left(p_{2}.x-p_{1}.x\\right)*\\left(p_{2}.y+p_{1}.y\\right)\\right)",
+                "hidden": true
+            },
+            {
+                "type": "expression",
+                "id": "2",
+                "folderId": "0",
+                "color": "#000000",
+                "latex": "g_{etCullingInformation}\\left(p_{oints},z_{Values},i_{ndices},o_{rdering}\\right)=\\left[\\left\\{\\operatorname{max}\\left(z_{Values}\\left[i_{ndices}\\left[\\left(n+1\\right)\\right]\\right],z_{Values}\\left[i_{ndices}\\left[\\left(n+2\\right)\\right]\\right],z_{Values}\\left[i_{ndices}\\left[\\left(n+3\\right)\\right]\\right],z_{Values}\\left[i_{ndices}\\left[\\left(n+4\\right)\\right]\\right]\\right)>0:\\left(w_{indingOrderContribution}\\left(p_{oints}\\left[i_{ndices}\\left[\\left(n+1\\right)\\right]\\right],p_{oints}\\left[i_{ndices}\\left[\\left(n+2\\right)\\right]\\right]\\right)+w_{indingOrderContribution}\\left(p_{oints}\\left[i_{ndices}\\left[\\left(n+2\\right)\\right]\\right],p_{oints}\\left[i_{ndices}\\left[\\left(n+3\\right)\\right]\\right]\\right)+w_{indingOrderContribution}\\left(p_{oints}\\left[i_{ndices}\\left[\\left(n+3\\right)\\right]\\right],p_{oints}\\left[i_{ndices}\\left[\\left(n+4\\right)\\right]\\right]\\right)+w_{indingOrderContribution}\\left(p_{oints}\\left[i_{ndices}\\left[\\left(n+4\\right)\\right]\\right],p_{oints}\\left[i_{ndices}\\left[\\left(n+1\\right)\\right]\\right]\\right)\\right),-1\\right\\}\\operatorname{for}n=\\left(4*\\left[0,...,\\frac{\\operatorname{floor}\\left(\\operatorname{length}\\left(i_{ndices}\\right)\\right)}{4}\\right]\\left[\\operatorname{join}\\left(o_{rdering},0\\right)\\right]\\right)\\right]",
+                "hidden": true
+            },
+            {
+                "type": "expression",
+                "id": "3",
+                "folderId": "0",
+                "color": "#000000",
+                "latex": "d_{rawQuadsIndexed}\\left(p_{oints},i_{ndices},o_{rdering}\\right)=\\left[\\operatorname{polygon}\\left(p_{oints}\\left[i_{ndices}\\left[\\left(n+1\\right)\\right]\\right],p_{oints}\\left[i_{ndices}\\left[\\left(n+2\\right)\\right]\\right],p_{oints}\\left[i_{ndices}\\left[\\left(n+3\\right)\\right]\\right],p_{oints}\\left[i_{ndices}\\left[\\left(n+4\\right)\\right]\\right]\\right)\\operatorname{for}n=\\left(4*\\left[0,...,\\frac{\\operatorname{floor}\\left(\\operatorname{length}\\left(i_{ndices}\\right)\\right)}{4}\\right]\\left[\\operatorname{join}\\left(o_{rdering},0\\right)\\right]\\right)\\right]",
+                "hidden": true
+            },
+            {
+                "type": "expression",
+                "id": "4",
+                "folderId": "0",
+                "color": "#000000",
+                "latex": "g_{etIndexedQuadDepths}\\left(d_{epths},i_{ndices}\\right)=\\left[\\frac{\\left(d_{epths}\\left[i_{ndices}\\left[\\left(n+1\\right)\\right]\\right]+d_{epths}\\left[i_{ndices}\\left[\\left(n+2\\right)\\right]\\right]+d_{epths}\\left[i_{ndices}\\left[\\left(n+3\\right)\\right]\\right]+d_{epths}\\left[i_{ndices}\\left[\\left(n+4\\right)\\right]\\right]\\right)}{4}\n\\operatorname{for}n=\\left(4*\\left[0,...,\\frac{\\operatorname{floor}\\left(\\operatorname{length}\\left(i_{ndices}\\right)\\right)}{4}\\right]\\right)\\right]",
+                "hidden": true
+            },
+            {
+                "type": "expression",
+                "id": "5",
+                "folderId": "0",
+                "color": "#000000",
+                "latex": "g_{etPolygonOrdering}\\left(d_{epths}\\right)=\\operatorname{sort}\\left(\\left[1,...,\\operatorname{length}\\left(d_{epths}\\right)\\right],\\left(-1*d_{epths}\\right)\\right)",
+                "hidden": true
+            },
+            {
+                "type": "expression",
+                "id": "6",
+                "folderId": "0",
+                "color": "#000000",
+                "latex": "g_{etMinimumQuadDepths}\\left(d_{epths}\\right)=\\left[\\operatorname{min}\\left(d_{epths}\\left[i_{ndices}\\left[\\left(n+1\\right)\\right]\\right],d_{epths}\\left[i_{ndices}\\left[\\left(n+2\\right)\\right]\\right],d_{epths}\\left[i_{ndices}\\left[\\left(n+3\\right)\\right]\\right],d_{epths}\\left[i_{ndices}\\left[\\left(n+4\\right)\\right]\\right]\\right)\n\\operatorname{for}n=\\left(4*\\left[0,...,\\frac{\\operatorname{floor}\\left(\\operatorname{length}\\left(i_{ndices}\\right)\\right)}{4}\\right]\\right)\\right]",
+                "hidden": true
+            },
+            {
+                "type": "expression",
+                "id": "7",
+                "folderId": "0",
+                "color": "#000000",
+                "latex": "c_{uboidIndexBuffer}=\\left[2,1,3,4,6,8,7,5,1,2,6,5,4,3,7,8,3,1,5,7,4,8,6,2\\right]",
+                "hidden": true
+            },
+            {
+                "type": "expression",
+                "id": "8",
+                "folderId": "0",
+                "color": "#000000",
+                "latex": "r_{otationView}=\\left(1.014,0.16\\right)"
+            },
+            {
+                "type": "expression",
+                "id": "9",
+                "folderId": "0",
+                "color": "#000000",
+                "latex": "r_{otation}=r_{otationView}",
+                "hidden": true
+            },
+            {
+                "type": "expression",
+                "id": "10",
+                "folderId": "0",
+                "color": "#000000",
+                "latex": "m_{ag}\\left(x,y\\right)=\\sqrt{\\left(x^{2}+y^{2}\\right)}",
+                "hidden": true
+            },
+            {
+                "type": "expression",
+                "id": "11",
+                "folderId": "0",
+                "color": "#000000",
+                "latex": "p_{roject3D}\\left(x,y,z\\right)=\\left\\{z>0:\\left(\\frac{x}{z},\\frac{y}{z}\\right),\\left(\\frac{0}{0},\\frac{0}{0}\\right)\\right\\}",
+                "hidden": true
+            },
+            {
+                "type": "expression",
+                "id": "12",
+                "folderId": "0",
+                "color": "#000000",
+                "latex": "p_{roject3DTranslated}\\left(x,y,z\\right)=\\left\\{z>0:p_{roject3D}\\left(\\left(x+0\\right),\\left(y+0\\right),\\left(z+0\\right)\\right),\\left(1000000*\\left(\\frac{x}{m_{ag}\\left(x,y\\right)},\\frac{y}{m_{ag}\\left(x,y\\right)}\\right)\\right)\\right\\}",
+                "hidden": true
+            },
+            {
+                "type": "expression",
+                "id": "13",
+                "folderId": "0",
+                "color": "#000000",
+                "latex": "x_{RotateAboutYAxis}\\left(x,y,z\\right)=\\left(\\left(x*\\operatorname{cos}\\left(r_{otation}.x\\right)\\right)-\\left(z*\\operatorname{sin}\\left(r_{otation}.x\\right)\\right)\\right)",
+                "hidden": true
+            },
+            {
+                "type": "expression",
+                "id": "14",
+                "folderId": "0",
+                "color": "#000000",
+                "latex": "z_{RotateAboutYAxis}\\left(x,y,z\\right)=\\left(\\left(x*\\operatorname{sin}\\left(r_{otation}.x\\right)\\right)+\\left(z*\\operatorname{cos}\\left(r_{otation}.x\\right)\\right)\\right)",
+                "hidden": true
+            },
+            {
+                "type": "expression",
+                "id": "15",
+                "folderId": "0",
+                "color": "#000000",
+                "latex": "y_{RotateAboutXAxis}\\left(x,y,z\\right)=\\left(\\left(y*\\operatorname{cos}\\left(r_{otation}.y\\right)\\right)-\\left(z*\\operatorname{sin}\\left(r_{otation}.y\\right)\\right)\\right)",
+                "hidden": true
+            },
+            {
+                "type": "expression",
+                "id": "16",
+                "folderId": "0",
+                "color": "#000000",
+                "latex": "z_{RotateAboutXAxis}\\left(x,y,z\\right)=\\left(\\left(y*\\operatorname{sin}\\left(r_{otation}.y\\right)\\right)+\\left(z*\\operatorname{cos}\\left(r_{otation}.y\\right)\\right)\\right)",
+                "hidden": true
+            },
+            {
+                "type": "folder",
+                "id": "17",
+                "title": "Path",
+                "collapsed": true
+            },
+            {
+                "type": "expression",
+                "id": "18",
+                "folderId": "17",
+                "color": "#000000",
+                "latex": "p_{athDims}=\\left[2,2,2\\right]",
+                "hidden": true
+            },
+            {
+                "type": "expression",
+                "id": "19",
+                "folderId": "17",
+                "color": "#000000",
+                "latex": "x_{Path1}=\\left(\\left[\\left(-1*0.25\\right),0.25,\\left(-1*0.25\\right),0.25,\\left(-1*0.25\\right),0.25,\\left(-1*0.25\\right),0.25\\right]+1\\right)",
+                "hidden": true
+            },
+            {
+                "type": "expression",
+                "id": "20",
+                "folderId": "17",
+                "color": "#000000",
+                "latex": "y_{Path1}=\\left(\\left[\\left(-1*0.5\\right),\\left(-1*0.5\\right),0.5,0.5,\\left(-1*0.5\\right),\\left(-1*0.5\\right),0.5,0.5\\right]+1\\right)",
+                "hidden": true
+            },
+            {
+                "type": "expression",
+                "id": "21",
+                "folderId": "17",
+                "color": "#000000",
+                "latex": "z_{Path1}=\\left(\\left[\\left(-1*0.75\\right),\\left(-1*0.75\\right),\\left(-1*0.75\\right),\\left(-1*0.75\\right),0.75,0.75,0.75,0.75\\right]+1\\right)",
+                "hidden": true
+            },
+            {
+                "type": "expression",
+                "id": "22",
+                "folderId": "17",
+                "color": "#000000",
+                "latex": "x_{Path2}=\\left(\\left[\\left(-1*0.25\\right),0.25,\\left(-1*0.25\\right),0.25,\\left(-1*0.25\\right),0.25,\\left(-1*0.25\\right),0.25\\right]+-1\\right)",
+                "hidden": true
+            },
+            {
+                "type": "expression",
+                "id": "23",
+                "folderId": "17",
+                "color": "#000000",
+                "latex": "y_{Path2}=\\left(\\left[\\left(-1*0.5\\right),\\left(-1*0.5\\right),0.5,0.5,\\left(-1*0.5\\right),\\left(-1*0.5\\right),0.5,0.5\\right]+-1\\right)",
+                "hidden": true
+            },
+            {
+                "type": "expression",
+                "id": "24",
+                "folderId": "17",
+                "color": "#000000",
+                "latex": "z_{Path2}=\\left(\\left[\\left(-1*0.75\\right),\\left(-1*0.75\\right),\\left(-1*0.75\\right),\\left(-1*0.75\\right),0.75,0.75,0.75,0.75\\right]+-1\\right)",
+                "hidden": true
+            },
+            {
+                "type": "expression",
+                "id": "25",
+                "folderId": "17",
+                "color": "#000000",
+                "latex": "x_{Path}=\\operatorname{join}\\left(x_{Path1},x_{Path2}\\right)",
+                "hidden": true
+            },
+            {
+                "type": "expression",
+                "id": "26",
+                "folderId": "17",
+                "color": "#000000",
+                "latex": "y_{Path}=\\operatorname{join}\\left(y_{Path1},y_{Path2}\\right)",
+                "hidden": true
+            },
+            {
+                "type": "expression",
+                "id": "27",
+                "folderId": "17",
+                "color": "#000000",
+                "latex": "z_{Path}=\\operatorname{join}\\left(z_{Path1},z_{Path2}\\right)",
+                "hidden": true
+            },
+            {
+                "type": "expression",
+                "id": "28",
+                "folderId": "17",
+                "color": "#000000",
+                "latex": "P_{athIndexBuffer}=\\operatorname{join}\\left(c_{uboidIndexBuffer},\\left(c_{uboidIndexBuffer}+8\\right)\\right)",
+                "hidden": true
+            },
+            {
+                "type": "expression",
+                "id": "29",
+                "folderId": "17",
+                "color": "#000000",
+                "latex": "x_{PathRotated}=x_{RotateAboutYAxis}\\left(x_{Path},y_{Path},z_{Path}\\right)",
+                "hidden": true
+            },
+            {
+                "type": "expression",
+                "id": "30",
+                "folderId": "17",
+                "color": "#000000",
+                "latex": "z_{PathLISPSMOSIntermediate}=z_{RotateAboutYAxis}\\left(x_{Path},y_{Path},z_{Path}\\right)",
+                "hidden": true
+            },
+            {
+                "type": "expression",
+                "id": "31",
+                "folderId": "17",
+                "color": "#000000",
+                "latex": "y_{PathRotated}=y_{RotateAboutXAxis}\\left(x_{PathRotated},y_{Path},z_{PathLISPSMOSIntermediate}\\right)",
+                "hidden": true
+            },
+            {
+                "type": "expression",
+                "id": "32",
+                "folderId": "17",
+                "color": "#000000",
+                "latex": "z_{PathRotated}=z_{RotateAboutXAxis}\\left(x_{PathRotated},y_{Path},z_{PathLISPSMOSIntermediate}\\right)",
+                "hidden": true
+            },
+            {
+                "type": "expression",
+                "id": "33",
+                "folderId": "17",
+                "color": "#000000",
+                "latex": "p_{athProjected}=\\operatorname{join}\\left(p_{roject3DTranslated}\\left(x_{PathRotated},y_{PathRotated},z_{PathRotated}\\right),\\left(\\frac{0}{0},\\frac{0}{0}\\right)\\right)",
+                "hidden": true
+            },
+            {
+                "type": "expression",
+                "id": "34",
+                "folderId": "17",
+                "color": "#000000",
+                "latex": "c_{olors}=\\left[\\operatorname{rgb}\\left(255,0,0\\right),\\operatorname{rgb}\\left(255,255,0\\right),\\operatorname{rgb}\\left(127,255,0\\right),\\operatorname{rgb}\\left(0,127,255\\right),\\operatorname{rgb}\\left(0,0,255\\right),\\operatorname{rgb}\\left(127,0,255\\right),\\operatorname{rgb}\\left(255,0,0\\right),\\operatorname{rgb}\\left(255,255,0\\right),\\operatorname{rgb}\\left(127,255,0\\right),\\operatorname{rgb}\\left(0,127,255\\right),\\operatorname{rgb}\\left(0,0,255\\right),\\operatorname{rgb}\\left(127,0,255\\right)\\right]\\left[P_{athPolygonOrdering}\\right]\\left[P_{athWindingOrders}>0\\right]",
+                "hidden": true
+            },
+            {
+                "type": "expression",
+                "id": "35",
+                "folderId": "17",
+                "color": "#000000",
+                "latex": "P_{athDepths}=g_{etIndexedQuadDepths}\\left(z_{PathRotated},P_{athIndexBuffer}\\right)",
+                "hidden": true
+            },
+            {
+                "type": "expression",
+                "id": "36",
+                "folderId": "17",
+                "color": "#000000",
+                "latex": "P_{athPolygonOrdering}=g_{etPolygonOrdering}\\left(P_{athDepths}\\right)",
+                "hidden": true
+            },
+            {
+                "type": "expression",
+                "id": "37",
+                "folderId": "17",
+                "color": "#000000",
+                "latex": "P_{athWindingOrders}=g_{etCullingInformation}\\left(p_{athProjected},z_{PathRotated},P_{athIndexBuffer},P_{athPolygonOrdering}\\right)",
+                "hidden": true
+            },
+            {
+                "type": "expression",
+                "id": "38",
+                "folderId": "17",
+                "color": "red",
+                "latex": "d_{rawQuadsIndexed}\\left(p_{athProjected},P_{athIndexBuffer},P_{athPolygonOrdering}\\right)\\left[P_{athWindingOrders}>0\\right]",
+                "lines": false,
+                "colorLatex": "c_{olors}",
+                "fillOpacity": "1"
+            },
+            {
+                "type": "folder",
+                "id": "39",
+                "title": "Towers",
+                "collapsed": true
+            }
+        ]
+    }
+}

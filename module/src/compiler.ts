@@ -192,6 +192,21 @@ export class LispsmosCompiler {
                   handlerLatex: this.expressionCompiler.astNodeToDesmosExpressions(astNode[1]), open: true
                 };
                 break;
+              case "viewport":
+                if (astNode.length != 5) {
+                  throw new Error("LISPsmos Error: Viewport bounds must be specified as four numbers!");
+                }
+                if (!astNode.slice(1).every(v => (typeof v == "string"))) {
+                  throw new Error("LISPsmos Error: Viewport bounds must be strings!");
+                }
+                let astNodeStr = (astNode as string[]);
+                this.desmosState.graph.viewport = {
+                  xmin: parseFloat(astNodeStr[1]),
+                  xmax: parseFloat(astNodeStr[2]),
+                  ymin: parseFloat(astNodeStr[3]),
+                  ymax: parseFloat(astNodeStr[4]),
+                }
+                break;
               case "folder":
                 this.astNodeToFolder(astNode);
                 break;
@@ -277,6 +292,7 @@ export class LispsmosCompiler {
         case "pointOpacity":
         case "pointSize":
         case "colorLatex":
+        case "fillOpacity":
           defaultExpression[astChild[0]] = this.expressionCompiler.astNodeToDesmosExpressions(astChild[1]);
           break;
         case "lineStyle":
@@ -303,6 +319,8 @@ export class LispsmosCompiler {
         case "lines":
           defaultExpression[astChild[0]] = (astChild[1] == "true");
           break;
+        default:
+          throw new Error(`LISPsmos Error: Unknown displayed expression property '${astChild[0]}'`);
       }
     }
     return defaultExpression;
