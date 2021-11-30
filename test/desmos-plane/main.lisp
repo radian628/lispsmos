@@ -5,6 +5,10 @@
   (programCounter pc)
 )
 
+(folder ((title "PLY File"))
+  (importPLY "http://localhost:8080/monke.ply" TestPLY)
+)
+
 ; Define starting viewport
 (viewport -2 2 -2 2)
 
@@ -49,7 +53,7 @@
             ([] zValues ([] indices (+ n 2)))
             ([] zValues ([] indices (+ n 3)))
           )
-          0
+          -16
           )
           (+
             (windingOrderContribution ([] points ([] indices (+ n 1))) ([] points ([] indices (+ n 2))))
@@ -100,6 +104,28 @@
     )
     (n (* 3 (list 0 ... (/ (floor (length indices)) 3)))))
   )
+  (fn getFaceColors rs gs bs indices
+    (comprehension (
+      (rgb
+        (mean
+          ([] rs ([] indices (+ n 1))) 
+          ([] rs ([] indices (+ n 2)))
+          ([] rs ([] indices (+ n 3)))
+        )
+        (mean
+          ([] gs ([] indices (+ n 1))) 
+          ([] gs ([] indices (+ n 2)))
+          ([] gs ([] indices (+ n 3)))
+        )
+        (mean
+          ([] bs ([] indices (+ n 1))) 
+          ([] bs ([] indices (+ n 2)))
+          ([] bs ([] indices (+ n 3)))
+        )
+      )
+    )
+    (n (* 3 (list 0 ... (/ (floor (length indices)) 3)))))
+  )
   (= cuboidIndexBuffer (list 
     2 1 3 4 2 3
     6 8 7 5 6 7
@@ -131,7 +157,7 @@
   (fn mag x y (sqrt (+ (^ x 2) (^ y 2))))
   (fn project3D x y z (piecewise ((> z 0) (point (/ x z) (/ y z))) ((point (/ 0 0) (/ 0 0)))))
   (fn project3DTranslated x y z (piecewise
-    ((> z 0) (project3D (+ x 0) (+ y 0) (+ z 0)))
+    ((> z -16) (project3D (+ x 0) (+ y 0) (+ z 16)))
     ((* 1000000 (point (/ x (mag x y)) (/ y (mag x y)))))
   ))
   (fn xRotateAboutYAxis x y z (- (* x (cos (.x rotation))) (* z (sin (.x rotation)))))
@@ -142,10 +168,12 @@
 
 (folder ((title "Path"))
   (= pathDims (list 2 2 2))
-  (cuboidVertexBuffer Path1 0.25 0.5 0.75 1 1 1)
-  (cuboidVertexBuffer Path2 0.25 0.5 0.75 -1 -1 -1)
-  (join3D Path Path1 Path2)
-  (= PathIndexBuffer (join cuboidIndexBuffer (+ cuboidIndexBuffer 8)))
+  ;(cuboidVertexBuffer Path1 0.25 0.5 0.75 1 1 1)
+  ;(cuboidVertexBuffer Path2 0.25 0.5 0.75 -1 -1 -1)
+  ;(join3D Path Path1 Path2)
+  ;(= PathIndexBuffer (join cuboidIndexBuffer (+ cuboidIndexBuffer 8)))
+  (defineXYZ Path TestPLYELEMvertexPROPx TestPLYELEMvertexPROPy TestPLYELEMvertexPROPz)
+  (= PathIndexBuffer (+ TestPLYELEMfacePROPvertexunderscoreindices 1))
 
   (getRotated Path PathRotated)
   (= pathProjected (join (project3DTranslated (x3 PathRotated) (y3 PathRotated) (z3 PathRotated)) (point (/ 0 0) (/ 0 0))))
@@ -168,7 +196,8 @@
         ;;   (rgb 127 0 255)
         ;; )
         ;; (rgb (/ (list 1 ... 1000) 5) (/ (list 1 ... 1000) 5) (/ (list 1 ... 1000) 5))
-        (comprehension (rgb n2 n2 n2) (n2 (* (list 1 ... 72) (/ 255 72))))
+        ;(comprehension (rgb n2 n2 n2) (n2 (* (list 1 ... 72) (/ 255 72))))
+        (getFaceColors TestPLYELEMvertexPROPred TestPLYELEMvertexPROPgreen TestPLYELEMvertexPROPblue PathIndexBuffer)
         PathPolygonOrdering
       )
       (> PathWindingOrders 0)

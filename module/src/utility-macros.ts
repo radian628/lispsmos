@@ -78,9 +78,9 @@ export function register (c: LispsmosCompiler) {
     if (Array.isArray(ast[1])) {
       throw new Error("LISPsmos Error: evalMacro name may only be used on a string!");
     }
-    let functionToEval = new Function("args", extractStringFromLiteral(ast[2]));
+    let functionToEval = new Function("args", "compiler", extractStringFromLiteral(ast[2]));
     compiler.registerMacro(ast[1], (ast2, compiler2): Array<ASTNode> => {
-      return functionToEval(ast2);
+      return functionToEval(ast2, compiler2);
     });
     return [];
   });

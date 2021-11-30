@@ -73,9 +73,16 @@ function _tokenStreamToAST(tokenStream: string[]) {
 
 
 export type MacroFunc = (ast: ASTNode[], compiler: LispsmosCompiler) => ASTNode[];
+export type ResourceGathererFunc = (ast: ASTNode[], compiler: LispsmosCompiler) => Promise<void>;
+
+export type ImportResult = { success: boolean, payload: any };
+export type ImportFunction = (compiler: LispsmosCompiler, location: string) => Promise<ImportResult>;
+
+export type CompilerHandler = (compiler: LispsmosCompiler) => void;
 
 export class LispsmosCompiler {
   macros: Map<string, MacroFunc>;
+  resourceGatherers: Map<string, ResourceGathererFunc>;
   macroState: any;
   shouldReapplyMacros: boolean;
   expressionCompiler: ExpressionCompiler;
@@ -86,19 +93,34 @@ export class LispsmosCompiler {
   events: {
     init: Function[];
   }
+  importers: ImportFunction[];
+  pendingResourceGatherers: Promise<void>[];
 
   constructor () {
+    this.importers = [];
     this.macros = new Map();
+    this.resourceGatherers = new Map();
     this.events = {
       init: []
     };
   }
 
-  compile(src: string): DesmosState {
+  async compile(src: string): Promise<DesmosState> {
+    this.pendingResourceGatherers = [];
     this.macroState = {};
-    this.compileAST(tokenStreamToAST(stringToTokenStream(src)));
+    this.events.init.forEach(fn => {
+      fn(this);
+    });
+    await this.compileAST(tokenStreamToAST(stringToTokenStream(src)));
     console.log(this.desmosState);
     return this.desmosState;
+  }
+
+  registerResourceGatherer(resourceGathererName: string, resourceGathererFn: ResourceGathererFunc): void {
+    if (this.resourceGatherers.get(resourceGathererName)) {
+      throw new Error(`LISPsmos Error: Resource Gatherer ${resourceGathererName} is already defined!`);
+    }
+    this.resourceGatherers.set(resourceGathererName, resourceGathererFn);
   }
 
   registerMacro(macroName: string, macroFn: MacroFunc): void {
@@ -108,11 +130,25 @@ export class LispsmosCompiler {
     this.macros.set(macroName, macroFn);
   }
 
-  registerEvent(eventName: "init", handler: Function): void {
+  registerImporter(importerFn: ImportFunction) {
+    this.importers.push(importerFn);
+  };
+
+  async import(location: string): Promise<ImportResult> {
+    for (let importerFn of this.importers) {
+      let result = await importerFn(this, location);
+      if (result.success) {
+        return result;
+      }
+    }
+    return { success: false, payload: undefined };
+  }
+
+  registerEvent(eventName: "init", handler: CompilerHandler): void {
     this.events[eventName].push(handler);
   }
 
-  compileAST(ast: ASTNode) {
+  async compileAST(ast: ASTNode) {
     //setup
     this.ast = ast;
     this.currentExpressionID = 0;
@@ -138,14 +174,37 @@ export class LispsmosCompiler {
     this.shouldReapplyMacros = true;
     while (this.shouldReapplyMacros) {
       this.shouldReapplyMacros = false;
+      this.gatherResources(this.ast);
+      await Promise.all(this.pendingResourceGatherers);
       this.ast = this.applyMacros(this.ast);
     }
+    console.log("FINISHED PREPROCESSING STEP");
+
+    //gather resources
 
     //create expression compiler
     this.expressionCompiler = new ExpressionCompiler();
 
     this.astNodeToDesmosState(this.ast);
     return this.desmosState;
+  }
+
+  gatherResources(ast: ASTNode): void {
+    if (Array.isArray(ast)) {
+      switch (typeof ast[0]) {
+        case "string":
+          console.log(this.resourceGatherers);
+          let resourceGatherer = this.resourceGatherers.get(ast[0]);
+          if (typeof resourceGatherer == "function") {
+            this.pendingResourceGatherers.push(resourceGatherer(ast, this));
+            console.log("Ran resourceGatherer " + ast[0]);
+          }
+          break;
+      }
+      for (let astChild of ast) {
+        this.gatherResources(astChild);
+      }
+    }
   }
 
   applyMacros(ast: ASTNode): ASTNode {

@@ -6,6 +6,8 @@
     "removeComments": true,
     "preserveConstEnums": true,
     "sourceMap": true,
+    "declarationMap": true,
+    "declaration": true,
     "outDir": "dist",
     "allowJs": true,
     "moduleResolution": "node",
