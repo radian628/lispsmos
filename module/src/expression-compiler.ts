@@ -11,6 +11,8 @@ export class ExpressionCompiler {
     switch (type) {
     case "variable":
       return (astPrimitive.length == 1) ? astPrimitive : `${astPrimitive.charAt(0)}_{${astPrimitive.slice(1)}}`;
+    case "other":
+      return "\\operatorname{dt}";
     default:
       return astPrimitive;
     }
@@ -89,7 +91,7 @@ export class ExpressionCompiler {
         if (!Array.isArray(condition[0])) {
           throw new Error(`LISPsmos Error: Piecewise condition must be a list. Received '${condition[0]}'`)
         }
-        let predicate = this.binaryOperatorToDesmosExpressions(condition[0], true);
+        let predicate = this.naryOperatorToDesmosExpressions(condition[0], true);
         let result = this.astNodeToDesmosExpressions(condition[1])
         conditions.push(`${predicate}:${result}`);
       } else if (condition.length == 1) {
@@ -200,6 +202,7 @@ export class ExpressionCompiler {
       case "<":
       case ">=":
       case "<=":
+        return this.naryOperatorToDesmosExpressions(astList, true);
       case "==":
       case "->":
         return this.binaryOperatorToDesmosExpressions(astList, true);

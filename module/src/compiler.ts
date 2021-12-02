@@ -149,6 +149,30 @@ export class LispsmosCompiler {
   }
 
   async compileAST(ast: ASTNode) {
+    //image importer setup
+    this.macroState.images = {};
+    this.registerResourceGatherer("image", async (ast, compiler) => {
+      let imageURL = ast[1];
+      if (Array.isArray(imageURL)) {
+        throw new Error("LISPsmos Error: Image URL cannot be list!");
+      }
+      imageURL = extractStringFromLiteral(imageURL);
+      return new Promise<void>((resolve, reject) => {
+        let img = new Image();
+        img.crossOrigin = "Anonymous";
+        img.onload = () => {
+          let canvas = document.createElement("canvas");
+          let ctx = canvas.getContext("2d");
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
+          this.macroState.images[imageURL as string] = canvas.toDataURL(); 
+          resolve();
+        }
+        img.src = (imageURL as string);
+      });
+    });
+
     //setup
     this.ast = ast;
     this.currentExpressionID = 0;
@@ -193,7 +217,6 @@ export class LispsmosCompiler {
     if (Array.isArray(ast)) {
       switch (typeof ast[0]) {
         case "string":
-          console.log(this.resourceGatherers);
           let resourceGatherer = this.resourceGatherers.get(ast[0]);
           if (typeof resourceGatherer == "function") {
             this.pendingResourceGatherers.push(resourceGatherer(ast, this));
@@ -269,6 +292,9 @@ export class LispsmosCompiler {
               case "folder":
                 this.astNodeToFolder(astNode);
                 break;
+              case "image":
+                this.astNodeToImage(astNode);
+                break;
               default:
                 let defaultExpression: DesmosExpression = {
                   "hidden": true,
@@ -296,6 +322,47 @@ export class LispsmosCompiler {
         //outStr += astPrimitiveToDesmos(astNode);
     }
     //return outObj;
+  }
+
+  astNodeToImage(astNode: Array<ASTNode>) {
+    
+    let imageState: DesmosExpression = {
+      type: "image",
+      id: (this.currentExpressionID++).toString()
+    };
+
+    let imageSource = astNode[1];
+    if (Array.isArray(imageSource)) {
+      throw new Error("LISPsmos Error: Image source cannot be a list!");
+    }
+    imageState.image_url = this.macroState.images[extractStringFromLiteral(imageSource)];
+
+    if (!Array.isArray(astNode[2])) {
+      throw new Error("LISPsmos Error: Image settings must be a list!");
+    }
+    for (let astChild of astNode[2]) {
+      switch (astChild[0]) {
+        case "name":
+          if (Array.isArray(astChild[1])) {
+            throw new Error("LISPsmos Error: Image must be a string!");
+          }
+          imageState.name = extractStringFromLiteral(astChild[1]);
+          break;
+        case "center":
+        case "width":
+        case "height":
+          imageState[astChild[0]] = this.expressionCompiler.astNodeToDesmosExpressions(astChild[1]);
+          break;
+        case "draggable":
+        case "foreground":
+          imageState[astChild[0]] = astChild[1] == "true";
+          break;
+        default:
+          throw new Error(`LISPsmos Error: Unknown image setting '${astChild[0]}'`)
+      }
+    }
+    
+    this.desmosState.expressions.list.push(imageState);
   }
 
   astNodeToFolder(astNode: Array<ASTNode>) {

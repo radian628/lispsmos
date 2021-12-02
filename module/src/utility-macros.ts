@@ -1,5 +1,5 @@
 //import { astToDesmosExpressions } from "./compiler";
-import { LispsmosCompiler, MacroFunc } from "./compiler.js";
+import { LispsmosCompiler, MacroFunc, stringToTokenStream, tokenStreamToAST } from "./compiler.js";
 import { ASTNode } from "./compiler-utils.js"
 import {extractStringFromLiteral } from "./compiler-utils.js";
 
@@ -37,6 +37,10 @@ function _findAndReplace(replaceSrc: ASTMapping, astToReplace: ASTNode): ASTNode
 }
 
 export function register (c: LispsmosCompiler) {
+  c.registerEvent("init", (compiler) => {
+    compiler.macroState.utility = { assets: {} };
+  })
+
   c.registerMacro("defineFindAndReplace", (ast, compiler): Array<ASTNode> => {
     //let ms = compiler.macroState;
     //if (!ms.utility) ms.utility = {};
@@ -83,6 +87,40 @@ export function register (c: LispsmosCompiler) {
       return functionToEval(ast2, compiler2);
     });
     return [];
+  });
+
+  
+  c.registerResourceGatherer("include", async (ast: ASTNode, compiler: LispsmosCompiler) => {
+    let importString = ast[1];
+    if (Array.isArray(importString)) {
+      throw new Error(`LISPsmos Error: Cannot import a list!`);
+    }
+    importString = extractStringFromLiteral(importString);
+    let file = await compiler.import(importString);
+    compiler.macroState.utility.assets[importString] = file;
+    return;
+  });
+  c.registerMacro("include", (ast: ASTNode, compiler: LispsmosCompiler): ASTNode[] => {
+    let importString = ast[1];
+    if (Array.isArray(importString)) {
+      throw new Error(`LISPsmos Error: Cannot import a list!`);
+    }
+    importString = extractStringFromLiteral(importString);
+    let importAttempt = compiler.macroState.utility.assets[importString].payload;
+    if (typeof importAttempt != "string") {
+      throw new Error(`LISPsmos Error: Cannot include '${importString}'- the file received was not a string. Received type '${typeof importAttempt}'`)
+    }
+    console.log(importAttempt);
+    
+    let importedAST;
+
+    try {
+      importedAST = tokenStreamToAST(stringToTokenStream(importAttempt));
+    } catch (err) {
+      throw new Error(`LISPsmos Error: Failed to import '${importString}'' because '${err.message}'`);
+    }
+    
+    return importedAST;
   });
 }
 

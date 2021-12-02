@@ -51,5 +51,8 @@ export let builtins = [
   "log",
   "random",
   "rgb",
-  "hsv"
+  "hsv",
+  "arcsin",
+  "arccos",
+  "arctan"
 ]

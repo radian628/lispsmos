@@ -9,6 +9,7 @@ export let tokenTypes: [string, RegExp][] = [
   ["range", /\.\.\./y],
   ["operator", /(\-\>|\+|\-|\*|\/|\^|\>\=|\<\=|\>|\<|\=\=|\=|\,)/y],
   ["keyword", /(piecewise|point|list|\.x|\.y|\[\]|fn|sum|prod|sqrt|compose|comprehension)(?![0-9]|[a-z]|[A-Z])/y],
+  ["other", /dt/y],
   ["macro", /a^/y],
   ["builtin", new RegExp(`(${builtins.map(builtin => `${builtin}(?!\\w)`).join("|")})`,"y")],
   ["variable", /([a-z]|[A-Z])([0-9]|[a-z]|[A-Z])*/y],
@@ -48,7 +49,7 @@ export type ParametricDomain = {
 export type DesmosExpression = {
   hidden?: boolean,
   folderId?: string,
-  type: "expression" | "folder",
+  type: "expression" | "folder" | "image",
   id: string,
   color?: string,
   latex?: string,
@@ -71,6 +72,15 @@ export type DesmosExpression = {
   },
   fill?: boolean,
   lines?: boolean
+
+  //image properties
+  center?: string,
+  draggable?: boolean,
+  foreground?: boolean,
+  width?: string,
+  height?: string,
+  image_url?: string,
+  name?: string
 };
 
 export type DesmosState = {
