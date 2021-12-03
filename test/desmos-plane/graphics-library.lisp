@@ -64,7 +64,7 @@
 
   ; cull faces if needed
   (fn windingOrderContribution p1 p2 (* (- (.x p2) (.x p1)) (+ (.y p2) (.y p1))))
-  (fn getCullingInformation points zValues indices ordering
+  (fn getCullingInformation points zValues indices ordering farPlane
     (comprehension 
       (piecewise
         ((>
@@ -73,7 +73,7 @@
             ([] zValues ([] indices (+ n 2)))
             ([] zValues ([] indices (+ n 3)))
           )
-          250
+          farPlane
         ) -1)
         ((> 
           (max

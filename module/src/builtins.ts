@@ -54,5 +54,6 @@ export let builtins = [
   "hsv",
   "arcsin",
   "arccos",
-  "arctan"
+  "arctan",
+  "abs"
 ]

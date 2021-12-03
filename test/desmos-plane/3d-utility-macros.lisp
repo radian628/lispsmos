@@ -37,10 +37,26 @@
   )
 )
 
-(defineFindAndReplace join3D name src1 src2
-  (defineXYZ name
-    (join (x3 src1) (x3 src2))
-    (join (y3 src1) (y3 src2))
-    (join (z3 src1) (z3 src2))
+;; (defineFindAndReplace join3D name src1 src2
+;;   (defineXYZ name
+;;     (join (x3 src1) (x3 src2))
+;;     (join (y3 src1) (y3 src2))
+;;     (join (z3 src1) (z3 src2))
+;;   )
+;; )
+
+(evalMacro join3D "
+  return [['defineXYZ', args[1],
+    ['join'].concat(args.slice(2).map(arg => 'x'+arg)),
+    ['join'].concat(args.slice(2).map(arg => 'y'+arg)),
+    ['join'].concat(args.slice(2).map(arg => 'z'+arg)),
+  ]];
+")
+
+(defineFindAndReplace averagePLYPos plyName
+  (list
+    (mean (PLYGet plyName vertex x))
+    (mean (PLYGet plyName vertex y))
+    (mean (PLYGet plyName vertex z))
   )
 )
