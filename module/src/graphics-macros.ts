@@ -128,6 +128,7 @@ export function register (c: LispsmosCompiler) {
     let outAST: ASTNode[] = [];
 
     console.log("PARSED PLY FILE:", parsedPLY);
+    parsedPLY.get("face").data.vertex_indices = parsedPLY.get("face").data.vertex_indices.map(triangle => (triangle as string[]).map(v => (1 + parseInt(v)).toString())); 
     parsedPLY.forEach((elem, elemName) => {
       Object.entries(elem.data).forEach((properties => {
         let propName = properties[0];

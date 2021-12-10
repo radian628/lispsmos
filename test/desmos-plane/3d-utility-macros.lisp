@@ -19,22 +19,22 @@
 
 ; 3D Component Interface
 (defineFindAndReplace x3 v
-  (concatTokens x v)
+  ((concatTokens x v))
 )
 (defineFindAndReplace y3 v
-  (concatTokens y v)
+  ((concatTokens y v))
 )
 (defineFindAndReplace z3 v
-  (concatTokens z v)
+  ((concatTokens z v))
 )
 
 ; translating vertex buffers
 (defineFindAndReplace getTranslated inputVar outputVar x y z
-  (defineXYZ outputVar
+  ((defineXYZ outputVar
     (+ (x3 inputVar) x)
     (+ (y3 inputVar) y)
     (+ (z3 inputVar) z)
-  )
+  ))
 )
 
 ;; (defineFindAndReplace join3D name src1 src2
@@ -52,11 +52,18 @@
     ['join'].concat(args.slice(2).map(arg => 'z'+arg)),
   ]];
 ")
+(defineFindAndReplace alias3D inputVar outputVar
+  (
+    (= (x3 outputVar) (x3 inputVar))
+    (= (y3 outputVar) (y3 inputVar))
+    (= (z3 outputVar) (z3 inputVar))
+  )
+)
 
 (defineFindAndReplace averagePLYPos plyName
-  (list
+  ((list
     (mean (PLYGet plyName vertex x))
     (mean (PLYGet plyName vertex y))
     (mean (PLYGet plyName vertex z))
-  )
+  ))
 )

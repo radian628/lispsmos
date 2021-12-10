@@ -10,11 +10,20 @@ compiler.macroState.desmosPlane = {};
 return [];
 ")
 
-(include "http://localhost:8080/desmos-plane/import-helpers.lisp")
-;(include "http://localhost:8080/desmos-plane/linear-algebra.lisp")
-(withRootPath include "linear-algebra.lisp")
-(withRootPath include "3d-utility-macros.lisp")
-(withRootPath include "graphics-library.lisp")
+(evalMacro withAssetPath
+  "
+  let url = '\u0022http://localhost:8080/desmos-plane/assets/' + args[2].slice(1, args[2].length-1) + '\u0022';
+  console.log(url);
+  return [[args[1], url, args[3]]];
+  "
+)
+(evalMacro withRootPath
+  "
+  let url = '\u0022http://localhost:8080/desmos-plane/' + args[2].slice(1, args[2].length-1) + '\u0022';
+  console.log(url);
+  return [[args[1], url, args[3]]];
+  "
+)
 
 (folder ((title "PLY Stuff"))
   (defineFindAndReplace PLYGet fileVar elementType propertyType
@@ -62,6 +71,9 @@ return [];
   (getFaceColors Star)
 )
 
+(include "http://localhost:8080/desmos-plane/linear-algebra.lisp")
+(include "http://localhost:8080/desmos-plane/3d-utility-macros.lisp")
+(include "http://localhost:8080/desmos-plane/graphics-library.lisp")
 
 ; Define starting viewport
 (viewport -2 2 -2 2)
@@ -70,7 +82,7 @@ return [];
 (folder ((title "3D Transformations"))
   (fn project3D x y z (piecewise ((> z 0) (point (/ x z) (/ y z))) ((point (/ 0 0) (/ 0 0)))))
   (fn project3DTranslated x y z (piecewise
-    ((> z -0) (point (/ x z) (/ y z)))
+    ((> z -0) (project3D x y z))
     ((* 1000 (point (/ x (magSq x y)) (/ y (magSq x y)))))
   ))
 )
@@ -199,22 +211,23 @@ return [];
 
   ; Transform airplane
   (defineXYZ AirplaneModelSpace (PLYGet Airplane vertex x) (PLYGet Airplane vertex y) (PLYGet Airplane vertex z))
-  (= AirplaneModelMatrix (mat3Multiply
-    ;; (mat3Multiply
-    ;;   (rotateAboutZAxis roll)
-    ;; )
-    (rotateAboutXAxis pitch)
-    (rotateAboutYAxis yaw)
-  ))
-  (getRotatedByMatrixAndThenTranslate AirplaneModelSpace AirplaneWorldSpace AirplaneModelMatrix ([] planePos 1) ([] planePos 2) ([] planePos 3))
-
+  ;; (= AirplaneModelMatrix (mat3Multiply
+  ;;   ;; (mat3Multiply
+  ;;   ;;   (rotateAboutZAxis roll)
+  ;;   ;; )
+  ;;   (rotateAboutXAxis pitch)
+  ;;   (rotateAboutYAxis yaw)
+  ;; ))
+  ;; (getRotatedByMatrixAndThenTranslate AirplaneModelSpace AirplaneWorldSpace AirplaneModelMatrix ([] planePos 1) ([] planePos 2) ([] planePos 3))
+  (mat3WithoutListFromRollPitchYaw AirplaneModelMatrix 0 yaw pitch)
+  (getRotatedByMatrixWithoutListAndThenTranslate AirplaneModelSpace AirplaneWorldSpace AirplaneModelMatrix ([] planePos 1) ([] planePos 2) ([] planePos 3)) 
 
 
   ; Transform star (TODO: FIX ROTATION)
-  (defineXYZ StarModelSpace (PLYGet Star vertex x) (PLYGet Star vertex y) (PLYGet Star vertex z)
-    ;(+ (* (cos (* 3.3 accumulatedTime)) (PLYGet Star vertex x)) (* (sin (* 3.3 accumulatedTime)) (PLYGet Star vertex z)))
-    ;(PLYGet Star vertex y)
-    ;(+ (* -1 (sin (* 3.3 accumulatedTime)) (PLYGet Star vertex x)) (* (cos (* 3.3 accumulatedTime)) (PLYGet Star vertex z)))
+  (defineXYZ StarModelSpace ;(PLYGet Star vertex x) (PLYGet Star vertex y) (PLYGet Star vertex z)
+    (+ (* (cos (* 3.3 accumulatedTime)) (PLYGet Star vertex x)) (* (sin (* 3.3 accumulatedTime)) (PLYGet Star vertex z)))
+    (PLYGet Star vertex y)
+    (+ (* -1 (sin (* 3.3 accumulatedTime)) (PLYGet Star vertex x)) (* (cos (* 3.3 accumulatedTime)) (PLYGet Star vertex z)))
   )
   ;(= starMeshPos (list 5 -2.5 0))
   (getTranslated StarModelSpace StarWorldSpace ([] starMeshPos 1) ([] starMeshPos 2) ([] starMeshPos 3))
@@ -319,9 +332,9 @@ return [];
   ;(= planeUpDir (getSingleRotatedByMatrix (list 0 1 0) AirplaneModelMatrix))
   ;(= planeForwardDir (getSingleRotatedByMatrix (list 0 0 1) AirplaneModelMatrix))
   ;(= planeRightDir (getSingleRotatedByMatrix (list 1 0 0) AirplaneModelMatrix))
-  (= planeUpDir ([] AirplaneModelMatrix (list 4 5 6)))
-  (= planeForwardDir ([] AirplaneModelMatrix (list 7 8 9)))
-  (= planeRightDir ([] AirplaneModelMatrix (list 1 2 3)))
+  (= planeUpDir (list AirplaneModelMatrix4 AirplaneModelMatrix5 AirplaneModelMatrix6))
+  (= planeForwardDir (list AirplaneModelMatrix7 AirplaneModelMatrix8 AirplaneModelMatrix9))
+  (= planeRightDir (list AirplaneModelMatrix1 AirplaneModelMatrix2 AirplaneModelMatrix3))
   (= planeWingNormal planeUpDir)
   (= flowDirection (* -1 planeVel))
   (= aerodynamicForceAgainstWing (* (dotVec3 planeUpDir flowDirection) 5 planeUpDir))
@@ -346,8 +359,8 @@ return [];
         (-> planeVel (+ (* (^ 0.99 deltaTime) planeVel) (* deltaTime (+ gravity aerodynamicForceAgainstWing aerodynamicForceAgainstRudder))))
         ; Control plane directions
         
-        (-> yaw (+ yaw (* (* -1.25 deltaTime) (+ (* -1 (.x rotationJoystickCenter)) (.x rotationJoystick)))))
-        (-> pitch (+ pitch (* (* 1.25 deltaTime) (+ (* -1 (.y rotationJoystickCenter)) (.y rotationJoystick)))))
+        (-> yaw (+ yaw (* (* -1.25 deltaTime) (.x rotationJoystick))))
+        (-> pitch (+ pitch (* (* 1.25 deltaTime) (.y rotationJoystick))))
         ; Test for crash
         (piecewise
           (
@@ -369,6 +382,8 @@ return [];
         )
         ; Move camera
         (-> cameraPos (mix idealCameraPos cameraPos (^ 0.01 deltaTime)))
+        ; add to global time
+        (-> globalTime (+ globalTime 1))
         (piecewise ((== (mod globalTime 32) 0) (,
           (-> planePosForTerrainSlots planePos)
           handleCheckpointCollision
@@ -390,6 +405,7 @@ return [];
       (-> pitch 0)
       (-> yaw (+ 5.37 (* 0.01 globalTime)))
       (-> cameraPos (list -50 -1.9 50))
+      (-> globalTime (+ globalTime 1))
       (piecewise ((== (mod globalTime 32) 0) 
           ((-> planePosForTerrainSlots planePos))
         )
@@ -406,11 +422,9 @@ return [];
       ((== menuState MenuStateStartGame) startGame)
     )
     (-> avgFPS (mix avgFPS (/ 1 deltaTime) 0.05))
-    (-> globalTime (+ globalTime 1))
   ))
   
 
-  (= rotationJoystickCenter (piecewise ((== phoneMode 0) (point 0 0)) ((point 0 -2.2))))
   (displayMe
     (= rotationJoystick (point 0 0))
     (colorLatex (rgb 255 0 0))
@@ -447,7 +461,7 @@ return [];
       (-> collisionPlanePos startPosition)
       (-> collisionPrevPlanePos startPosition)
       (-> globalTime 0)
-      (-> rotationJoystick rotationJoystickCenter)
+      (-> rotationJoystick (point 0 0))
       (-> menuState MenuStateGame)
     )
   )

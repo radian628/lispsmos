@@ -10,11 +10,20 @@ compiler.macroState.desmosPlane = {};
 return [];
 ")
 
-(include "http://localhost:8080/desmos-plane/import-helpers.lisp")
-;(include "http://localhost:8080/desmos-plane/linear-algebra.lisp")
-(withRootPath include "linear-algebra.lisp")
-(withRootPath include "3d-utility-macros.lisp")
-(withRootPath include "graphics-library.lisp")
+(evalMacro withAssetPath
+  "
+  let url = '\u0022http://localhost:8080/desmos-plane/assets/' + args[2].slice(1, args[2].length-1) + '\u0022';
+  console.log(url);
+  return [[args[1], url, args[3]]];
+  "
+)
+(evalMacro withRootPath
+  "
+  let url = '\u0022http://localhost:8080/desmos-plane/' + args[2].slice(1, args[2].length-1) + '\u0022';
+  console.log(url);
+  return [[args[1], url, args[3]]];
+  "
+)
 
 (folder ((title "PLY Stuff"))
   (defineFindAndReplace PLYGet fileVar elementType propertyType
@@ -62,6 +71,9 @@ return [];
   (getFaceColors Star)
 )
 
+(include "http://localhost:8080/desmos-plane/linear-algebra.lisp")
+(include "http://localhost:8080/desmos-plane/3d-utility-macros.lisp")
+(include "http://localhost:8080/desmos-plane/graphics-library.lisp")
 
 ; Define starting viewport
 (viewport -2 2 -2 2)
@@ -70,7 +82,7 @@ return [];
 (folder ((title "3D Transformations"))
   (fn project3D x y z (piecewise ((> z 0) (point (/ x z) (/ y z))) ((point (/ 0 0) (/ 0 0)))))
   (fn project3DTranslated x y z (piecewise
-    ((> z -0) (point (/ x z) (/ y z)))
+    ((> z -0) (project3D x y z))
     ((* 1000 (point (/ x (magSq x y)) (/ y (magSq x y)))))
   ))
 )
@@ -181,8 +193,8 @@ return [];
 
   ; fade color
   (= sunOcclusionFactor  (piecewise
-    ((== (isInsideViewbox planePos SunOccluder1) 1) 
-    (min (max (* 0.3 (distanceInsideBox planePos SunOccluder1)) 0) 1))
+    ((== (isInsideViewbox renderPlanePos SunOccluder1) 1) 
+    (min (max (* 0.3 (distanceInsideBox renderPlanePos SunOccluder1)) 0) 1))
     (0)))
   (= fadeColor 
     (mix
@@ -206,7 +218,7 @@ return [];
     (rotateAboutXAxis pitch)
     (rotateAboutYAxis yaw)
   ))
-  (getRotatedByMatrixAndThenTranslate AirplaneModelSpace AirplaneWorldSpace AirplaneModelMatrix ([] planePos 1) ([] planePos 2) ([] planePos 3))
+  (getRotatedByMatrixAndThenTranslate AirplaneModelSpace AirplaneWorldSpace renderAirplaneModelMatrix ([] renderPlanePos 1) ([] renderPlanePos 2) ([] renderPlanePos 3))
 
 
 
@@ -256,7 +268,7 @@ return [];
   ))
 
   ; View space to camera space to 2D on the VBO
-  (getTranslatedAndThenRotateByMatrix VBOWorldSpace VBOCameraSpace cameraMatrix (* -1 ([] cameraPos 1)) (* -1 ([] cameraPos 2)) (* -1 ([] cameraPos 3)))
+  (getTranslatedAndThenRotateByMatrix VBOWorldSpace VBOCameraSpace renderCameraMatrix (* -1 ([] renderCameraPos 1)) (* -1 ([] renderCameraPos 2)) (* -1 ([] renderCameraPos 3)))
   ;(getTranslated VBOWorldSpace VBOCameraSpace (* -1 ([] cameraPos 1)) (* -1 ([] cameraPos 2)) (* -1 ([] cameraPos 3)))
   (= cameraMatrix (mat3Multiply (rotateAboutYAxis (* -1 (.x cameraRotation))) (rotateAboutXAxis (* -1 (.y cameraRotation)))))
   (= invCameraMatrix (mat3Multiply (rotateAboutXAxis (* 1 (.y cameraRotation))) (rotateAboutYAxis (* 1 (.x cameraRotation)))))
@@ -311,7 +323,11 @@ return [];
   (= collisionPlanePos (list 0 0 0))
   (= collisionPrevPlanePos (list 0 0 0))
 
-  ;(= cameraMatrix mat3Identity)
+  (= renderPlanePos (list 0 0 0))
+  (= renderCameraPos (list 0 0 0))
+  (= renderCameraMatrix mat3Identity)
+  (= renderInvCameraMatrix mat3Identity)
+  (= renderAirplaneModelMatrix mat3Identity)
 
   (= planeVel (list 0 0 0))
   (= planeSpeed (+ 0.00000001 (mag3D ([] planeVel 1) ([] planeVel 2) ([] planeVel 3))))
@@ -319,9 +335,9 @@ return [];
   ;(= planeUpDir (getSingleRotatedByMatrix (list 0 1 0) AirplaneModelMatrix))
   ;(= planeForwardDir (getSingleRotatedByMatrix (list 0 0 1) AirplaneModelMatrix))
   ;(= planeRightDir (getSingleRotatedByMatrix (list 1 0 0) AirplaneModelMatrix))
-  (= planeUpDir ([] AirplaneModelMatrix (list 4 5 6)))
-  (= planeForwardDir ([] AirplaneModelMatrix (list 7 8 9)))
-  (= planeRightDir ([] AirplaneModelMatrix (list 1 2 3)))
+  (= planeUpDir ([] renderAirplaneModelMatrix (list 4 5 6)))
+  (= planeForwardDir ([] renderAirplaneModelMatrix (list 7 8 9)))
+  (= planeRightDir ([] renderAirplaneModelMatrix (list 1 2 3)))
   (= planeWingNormal planeUpDir)
   (= flowDirection (* -1 planeVel))
   (= aerodynamicForceAgainstWing (* (dotVec3 planeUpDir flowDirection) 5 planeUpDir))
@@ -346,8 +362,8 @@ return [];
         (-> planeVel (+ (* (^ 0.99 deltaTime) planeVel) (* deltaTime (+ gravity aerodynamicForceAgainstWing aerodynamicForceAgainstRudder))))
         ; Control plane directions
         
-        (-> yaw (+ yaw (* (* -1.25 deltaTime) (+ (* -1 (.x rotationJoystickCenter)) (.x rotationJoystick)))))
-        (-> pitch (+ pitch (* (* 1.25 deltaTime) (+ (* -1 (.y rotationJoystickCenter)) (.y rotationJoystick)))))
+        (-> yaw (+ yaw (* (* -1.25 deltaTime) (.x rotationJoystick))))
+        (-> pitch (+ pitch (* (* 1.25 deltaTime) (.y rotationJoystick))))
         ; Test for crash
         (piecewise
           (
@@ -369,6 +385,8 @@ return [];
         )
         ; Move camera
         (-> cameraPos (mix idealCameraPos cameraPos (^ 0.01 deltaTime)))
+        ; add to global time
+        (-> globalTime (+ globalTime 1))
         (piecewise ((== (mod globalTime 32) 0) (,
           (-> planePosForTerrainSlots planePos)
           handleCheckpointCollision
@@ -390,6 +408,7 @@ return [];
       (-> pitch 0)
       (-> yaw (+ 5.37 (* 0.01 globalTime)))
       (-> cameraPos (list -50 -1.9 50))
+      (-> globalTime (+ globalTime 1))
       (piecewise ((== (mod globalTime 32) 0) 
           ((-> planePosForTerrainSlots planePos))
         )
@@ -406,11 +425,19 @@ return [];
       ((== menuState MenuStateStartGame) startGame)
     )
     (-> avgFPS (mix avgFPS (/ 1 deltaTime) 0.05))
-    (-> globalTime (+ globalTime 1))
+    (piecewise ((== (mod globalTime 1) 0)
+        (,
+          (-> renderCameraPos cameraPos)
+          (-> renderPlanePos planePos)
+          (-> renderAirplaneModelMatrix AirplaneModelMatrix)
+          (-> renderCameraMatrix cameraMatrix)
+          (-> renderInvCameraMatrix invCameraMatrix)
+        )
+      )
+    )
   ))
   
 
-  (= rotationJoystickCenter (piecewise ((== phoneMode 0) (point 0 0)) ((point 0 -2.2))))
   (displayMe
     (= rotationJoystick (point 0 0))
     (colorLatex (rgb 255 0 0))
@@ -447,7 +474,7 @@ return [];
       (-> collisionPlanePos startPosition)
       (-> collisionPrevPlanePos startPosition)
       (-> globalTime 0)
-      (-> rotationJoystick rotationJoystickCenter)
+      (-> rotationJoystick (point 0 0))
       (-> menuState MenuStateGame)
     )
   )
@@ -592,7 +619,7 @@ return [];
     ((getNListElems starLocations (- (* 3 currentStarIndex) 2) 3))
   ))
   (= checkCollisionWithStar (piecewise
-    ((< (distance3D planePos starMeshPos) 1) (-> starsFound (replaceSingleListElem starsFound currentStarIndex 1)))
+    ((< (distance3D planePos starMeshPos) 0.5) (-> starsFound (replaceSingleListElem starsFound currentStarIndex 1)))
   ))
 
   (= starsFound (list 0 0))

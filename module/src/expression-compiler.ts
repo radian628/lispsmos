@@ -10,9 +10,10 @@ export class ExpressionCompiler {
     let type = getTokenType(astPrimitive);
     switch (type) {
     case "variable":
-      return (astPrimitive.length == 1) ? astPrimitive : `${astPrimitive.charAt(0)}_{${astPrimitive.slice(1)}}`;
+      let parsedVarName = astPrimitive.replace(/\_/g, "LISPSMOSUNDERSCORE");
+      return (parsedVarName.length == 1) ? parsedVarName : `${parsedVarName.charAt(0)}_{${parsedVarName.slice(1)}}`;
     case "other":
-      return "\\operatorname{dt}";
+      return `\\operatorname{${astPrimitive}}`;
     default:
       return astPrimitive;
     }

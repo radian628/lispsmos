@@ -9,10 +9,10 @@ export let tokenTypes: [string, RegExp][] = [
   ["range", /\.\.\./y],
   ["operator", /(\-\>|\+|\-|\*|\/|\^|\>\=|\<\=|\>|\<|\=\=|\=|\,)/y],
   ["keyword", /(piecewise|point|list|\.x|\.y|\[\]|fn|sum|prod|sqrt|compose|comprehension)(?![0-9]|[a-z]|[A-Z])/y],
-  ["other", /dt/y],
+  ["other", /(dt|index)(?![0-9]|[a-z]|[A-Z])/y],
   ["macro", /a^/y],
   ["builtin", new RegExp(`(${builtins.map(builtin => `${builtin}(?!\\w)`).join("|")})`,"y")],
-  ["variable", /([a-z]|[A-Z])([0-9]|[a-z]|[A-Z])*/y],
+  ["variable", /([a-z]|[A-Z]|\_)([0-9]|[a-z]|[A-Z]|\_)*/y],
   ["whitespace", /\s+/y]
 ]
 
@@ -81,6 +81,12 @@ export type DesmosExpression = {
   height?: string,
   image_url?: string,
   name?: string
+
+  //label
+  showLabel?: boolean,
+  label?: string,
+  labelSize?: string
+  suppressTextOutline?: boolean
 };
 
 export type DesmosState = {

@@ -203,7 +203,7 @@ export class LispsmosCompiler {
       this.ast = this.applyMacros(this.ast);
     }
     console.log("FINISHED PREPROCESSING STEP");
-
+    console.log(this.ast);
     //gather resources
 
     //create expression compiler
@@ -318,7 +318,7 @@ export class LispsmosCompiler {
             break;
         }
     } else {
-        throw new Error("No top level primitives (i might have screwed up the implementation for this).")
+        throw new Error("LISPsmos Error: No top level primitives (i might have screwed up the implementation for this.). Offending section: "+ astNode);
         //outStr += astPrimitiveToDesmos(astNode);
     }
     //return outObj;
@@ -419,7 +419,12 @@ export class LispsmosCompiler {
         case "pointSize":
         case "colorLatex":
         case "fillOpacity":
+        case "labelSize":
           defaultExpression[astChild[0]] = this.expressionCompiler.astNodeToDesmosExpressions(astChild[1]);
+          break;
+        case "label":
+          if (Array.isArray(astChild[1])) throw new Error("LISPsmos Error: Expression label cannot be a list!");
+          defaultExpression[astChild[0]] = extractStringFromLiteral(astChild[1]);
           break;
         case "lineStyle":
         case "pointStyle":
@@ -443,6 +448,9 @@ export class LispsmosCompiler {
           break;
         case "fill":
         case "lines":
+        case "hidden":
+        case "showLabel":
+        case "suppressTextOutline":
           defaultExpression[astChild[0]] = (astChild[1] == "true");
           break;
         default:
