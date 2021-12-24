@@ -38,8 +38,31 @@ function _findAndReplace(replaceSrc: ASTMapping, astToReplace: ASTNode): ASTNode
 
 export function register (c: LispsmosCompiler) {
   c.registerEvent("init", (compiler) => {
-    compiler.macroState.utility = { assets: {} };
+    compiler.macroState.utility = { assets: {}, preprocessorFlags: new Set<string>(), keyValueStore: new Map<string, ASTNode>() };
   })
+
+  c.registerMacro("setKeyValueStore", (ast, compiler) => {
+    let args = ast.slice(1);
+    args.forEach(arg => {
+      if (!Array.isArray(arg) || arg.length != 2) {
+        throw new Error("LISPsmos Error: setKeyValueStore arguments must be two-element lists representing key-value pairs!");
+      }
+      let key = arg[0];
+      let value = arg[1];
+      if (Array.isArray(key)) {
+        throw new Error("LISPsmos Error: setKeyValueStore keys must be strings!");
+      }
+      compiler.macroState.utility.keyValueStore.set(key, value);
+    })
+    return [];
+  });
+
+  c.registerMacro("getKeyValueStore", (ast, compiler) => {
+    if (Array.isArray(ast[1])) {
+      throw new Error("LISPsmos Error: getKeyValueStore keys must be strings!");
+    }
+    return [compiler.macroState.utility.keyValueStore.get(ast[1])];
+  });
 
   c.registerMacro("defineFindAndReplace", (ast, compiler): Array<ASTNode> => {
     //let ms = compiler.macroState;
@@ -89,12 +112,51 @@ export function register (c: LispsmosCompiler) {
     return [];
   });
 
+  c.registerMacro("triggerFlag", (ast, compiler): Array<ASTNode> => {
+    if (Array.isArray(ast[1])) {
+      throw new Error("LISPsmos Error: Preprocessor flag cannot be a list!");
+    }
+    compiler.macroState.utility.preprocessorFlags.add(ast[1]);
+    console.log(compiler.macroState.utility.preprocessorFlags);
+    return [];
+  });
+
+  c.registerMacro("preprocessIf", (ast, compiler): Array<ASTNode> => {
+    if (!Array.isArray(ast[2])) {
+      throw new Error("LISPsmos Error: preprocessIf body must be a list!");
+    }
+    if (Array.isArray(ast[1])) {
+      throw new Error("LISPsmos Error: preprocessIf may only be used on a string!");
+    }
+    console.log("stupid");
+    if (compiler.macroState.utility.preprocessorFlags.has(ast[1])) {
+      return ast[2];
+    }
+    return [ast];
+  });
+
+  c.registerMacro("preprocessIfJS", (ast, compiler): Array<ASTNode> => {
+    if (!Array.isArray(ast[2])) {
+      throw new Error("LISPsmos Error: preprocessIfJS body must be a list!");
+    }
+    if (Array.isArray(ast[1])) {
+      throw new Error("LISPsmos Error: preprocessIfJS may only be used on a string!");
+    }
+
+    let functionToEval = new Function("args", "compiler", extractStringFromLiteral(ast[1]));
+
+    if (functionToEval(ast, compiler)) {
+      return ast[2];
+    }
+    return [ast];
+  });
+
   c.registerMacro("inlineJS", (ast, compiler): ASTNode[] => {
     if (Array.isArray(ast[1])) {
       throw new Error("LISPsmos Error: Inline JavaScript macro must be given a string!");
     }
-    let functionToEval = new Function("compiler", extractStringFromLiteral(ast[1]));
-    return functionToEval(compiler);
+    let functionToEval = new Function("args", "compiler", extractStringFromLiteral(ast[1]));
+    return functionToEval(ast, compiler);
   });
 
   

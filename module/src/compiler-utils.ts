@@ -85,6 +85,7 @@ export type DesmosExpression = {
   //label
   showLabel?: boolean,
   label?: string,
+  labelOrientation?: string,
   labelSize?: string
   suppressTextOutline?: boolean
 };

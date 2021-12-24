@@ -6,6 +6,23 @@ let defaultMacroRegex = /a^/y;
 
 let macros;
 
+let possibleLabelOrientations = [
+  "default",
+  "center",
+  "center_auto",
+  "auto_center",
+  "above",
+  "above_left",
+  "above_right",
+  "above_auto",
+  "below",
+  "below_left",
+  "below_right",
+  "below_auto",
+  "left",
+  "auto_left",
+  "right",
+  "auto_right"];
 
 export function stringToTokenStream(str: string): string[][] {
   let index = 0;
@@ -220,7 +237,7 @@ export class LispsmosCompiler {
           let resourceGatherer = this.resourceGatherers.get(ast[0]);
           if (typeof resourceGatherer == "function") {
             this.pendingResourceGatherers.push(resourceGatherer(ast, this));
-            console.log("Ran resourceGatherer " + ast[0]);
+            
           }
           break;
       }
@@ -239,7 +256,6 @@ export class LispsmosCompiler {
       switch (typeof ast[0]) {
         case "string":
           if (typeof this.macros.get(ast[0]) == "function") {
-            console.log("Ran macro " + ast[0]);
             this.shouldReapplyMacros = true;
             return this.macros.get(ast[0])(ast, this);
           } else {
@@ -426,6 +442,11 @@ export class LispsmosCompiler {
           if (Array.isArray(astChild[1])) throw new Error("LISPsmos Error: Expression label cannot be a list!");
           defaultExpression[astChild[0]] = extractStringFromLiteral(astChild[1]);
           break;
+        case "labelOrientation":
+          if (Array.isArray(astChild[1])) throw new Error("LISPsmos Error: Expression label orientation cannot be a list!");
+          if (possibleLabelOrientations.indexOf(astChild[1]) == -1) {
+            throw new Error(`LISPsmos Error: labelOrientation ${astChild[1]} does not exist!`);
+          }
         case "lineStyle":
         case "pointStyle":
         case "color":

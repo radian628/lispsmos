@@ -288,20 +288,26 @@
   (= yVBOViewSpace (+ (* xVBOViewSpaceIntermediate1 xContribToY) (* yVBOViewSpaceIntermediate1 yContribToY) (* zVBOViewSpaceIntermediate1 zContribToY)))
   (= zVBOViewSpace (+ (* xVBOViewSpaceIntermediate1 xContribToZ) (* yVBOViewSpaceIntermediate1 yContribToZ) (* zVBOViewSpaceIntermediate1 zContribToZ)))
 
-  (= roll (* -0.05 (.x joystickDeltaRotation)))
-  (multilayerFn project x y z
-    (
-      (xProj (/ x z))
-      (yProj (/ y z))
-      (xRolled (- (* xProj (cos roll)) (* yProj (sin roll))))
-      (yRolled (+ (* xProj (sin roll)) (* yProj (cos roll))))
-      (return (piecewise
-        ((> z 0) (point xRolled yRolled))
-        ((* 1000 z (point xRolled yRolled)))
-      ))
+  ;;; (= roll (* -0.05 (.x joystickDeltaRotation)))
+  ;; (multilayerFn project x y z
+  ;;   (
+  ;;     (xProj (/ x z))
+  ;;     (yProj (/ y z))
+  ;;     (xRolled (- (* xProj (cos roll)) (* yProj (sin roll))))
+  ;;     (yRolled (+ (* xProj (sin roll)) (* yProj (cos roll))))
+  ;;     (return (piecewise
+  ;;       ((> z 0) (point xRolled yRolled))
+  ;;       ((* 1000 z (point xRolled yRolled)))
+  ;;     ))
+  ;;   )
+  ;; )
+
+  (fn project x y z
+    (piecewise 
+      ((> z 0) (point (/ x z) (/ y z)))
+      ((* 1000 (point x y)))
     )
   )
-
 
   (= VBOScreenSpace (project xVBOViewSpace yVBOViewSpace zVBOViewSpace))
 
@@ -374,84 +380,80 @@
     (fillOpacity 1)
   )
 
-  ; sun
-  (defineFindAndReplace ifElse predicate ifStatement elseStatement ((piecewise (predicate ifStatement) (elseStatement))))
-  (= unrotatedSunPos (getKeyValueStore sunPosition))
-  (= sunPos 
-    (project 
-      (+ (* ([] unrotatedSunPos 1) xContribToX) (* ([] unrotatedSunPos 2) yContribToX) (* ([] unrotatedSunPos 3) zContribToX))
-      (+ (* ([] unrotatedSunPos 1) xContribToY) (* ([] unrotatedSunPos 2) yContribToY) (* ([] unrotatedSunPos 3) zContribToY))
-      (+ (* ([] unrotatedSunPos 1) xContribToZ) (* ([] unrotatedSunPos 2) yContribToZ) (* ([] unrotatedSunPos 3) zContribToZ))
-    )
-  )
+  ;; ; sun
+  ;; (= unrotatedSunPos (getKeyValueStore sunPosition))
+  ;; (= sunPos 
+  ;;   (project 
+  ;;     (+ (* ([] unrotatedSunPos 1) xContribToX) (* ([] unrotatedSunPos 2) yContribToX) (* ([] unrotatedSunPos 3) zContribToX))
+  ;;     (+ (* ([] unrotatedSunPos 1) xContribToY) (* ([] unrotatedSunPos 2) yContribToY) (* ([] unrotatedSunPos 3) zContribToY))
+  ;;     (+ (* ([] unrotatedSunPos 1) xContribToZ) (* ([] unrotatedSunPos 2) yContribToZ) (* ([] unrotatedSunPos 3) zContribToZ))
+  ;;   )
+  ;; )
 
-  (defineFindAndReplace sunCircle opacity size
-    ((displayMe
-      (+ sunPos (* (point (cos t) (sin t)) (/ size (abs (+ xContribToZ yContribToZ (* -1 zContribToZ))))))
-      (parametricDomain
-        (min 0)
-        (max (ifElse (== sunEnabled 1) 6.29 0))
-      )
-      (colorLatex (rgb 255 251 133))
-      (fillOpacity opacity)
-      (lines false)
-      (fill true)
-    ))
-  )
-  (sunCircle 1 0.15)
-  (sunCircle 0.5 0.3)
-  (sunCircle 0.25 0.6)
+  ;; (defineFindAndReplace sunCircle opacity size
+  ;;   ((displayMe
+  ;;     (+ sunPos (* (point (cos t) (sin t)) (/ size (abs (+ xContribToZ yContribToZ (* -1 zContribToZ))))))
+  ;;     (parametricDomain
+  ;;       (min 0)
+  ;;       (max 6.29)
+  ;;     )
+  ;;     (colorLatex (rgb 255 251 133))
+  ;;     (fillOpacity opacity)
+  ;;     (lines false)
+  ;;     (fill true)
+  ;;   ))
+  ;; )
+  ;; (sunCircle 1 0.15)
+  ;; (sunCircle 0.5 0.3)
+  ;; (sunCircle 0.25 0.6)
 
-  (defineFindAndReplace CLOUD_COUNT ((* 30 cloudsEnabled)))
-  (defineFindAndReplace POINTS_PER_CLOUD ((* 15 cloudsEnabled)))
+  ;; (defineFindAndReplace CLOUD_COUNT ((* 30 cloudsEnabled)))
+  ;; (defineFindAndReplace POINTS_PER_CLOUD ((* 15 cloudsEnabled)))
 
-  (= settingsCloudsEnabled 1)
-  (= cloudsEnabled (*
-    settingsCloudsEnabled
-    (piecewise ((== gameState GAMESTATE_GAME) 1) (0))
-  ))
+  ;; (= settingsCloudsEnabled 1)
+  ;; (= cloudsEnabled (*
+  ;;   settingsCloudsEnabled
+  ;;   (piecewise ((== gameState GAMESTATE_GAME) 1) (0))
+  ;; ))
 
-  (= xCloudCenters (+ -128 (* 256 (random (CLOUD_COUNT) 5))))
-  (= yCloudCenters (+ 32 (* 16 (random (CLOUD_COUNT) 6))))
-  (= zCloudCenters (+ -128 (* 256 (random (CLOUD_COUNT) 7))))
-  (= xCloudOffsets (+ -8 (* 16 (random (* (CLOUD_COUNT) (POINTS_PER_CLOUD))))))
-  (= yCloudOffsets (+ -4 (* 8 (random (* (CLOUD_COUNT) (POINTS_PER_CLOUD))))))
-  (= zCloudOffsets (+ -6 (* 12 (random (* (CLOUD_COUNT) (POINTS_PER_CLOUD))))))
+  ;; (= xCloudCenters (+ -128 (* 256 (random (CLOUD_COUNT) 5))))
+  ;; (= yCloudCenters (+ 32 (* 16 (random (CLOUD_COUNT) 6))))
+  ;; (= zCloudCenters (+ -128 (* 256 (random (CLOUD_COUNT) 7))))
+  ;; (= xCloudOffsets (+ -8 (* 16 (random (* (CLOUD_COUNT) (POINTS_PER_CLOUD))))))
+  ;; (= yCloudOffsets (+ -4 (* 8 (random (* (CLOUD_COUNT) (POINTS_PER_CLOUD))))))
+  ;; (= zCloudOffsets (+ -6 (* 12 (random (* (CLOUD_COUNT) (POINTS_PER_CLOUD))))))
 
-  (= cloudCenterLister (ifElse (== cloudsEnabled 1) (list 1 ... (CLOUD_COUNT)) (list)))
-  (= cloudPointLister (ifElse (== cloudsEnabled 1) (list 1 ... (POINTS_PER_CLOUD)) (list)))
+  ;; (= xCloudPoints (comprehension
+  ;;   (+ ([] xCloudCenters centerCounter) ([] xCloudOffsets (+ (* (- centerCounter 1) (POINTS_PER_CLOUD)) pointCounter)))
+  ;;   (centerCounter (list 1 ... (CLOUD_COUNT)))
+  ;;   (pointCounter (list 1 ... (POINTS_PER_CLOUD)))
+  ;; ))
+  ;; (= yCloudPoints (comprehension
+  ;;   (+ ([] yCloudCenters centerCounter) ([] yCloudOffsets (+ (* (- centerCounter 1) (POINTS_PER_CLOUD)) pointCounter)))
+  ;;   (centerCounter (list 1 ... (CLOUD_COUNT)))
+  ;;   (pointCounter (list 1 ... (POINTS_PER_CLOUD)))
+  ;; ))
+  ;; (= zCloudPoints (comprehension
+  ;;   (+ ([] zCloudCenters centerCounter) ([] zCloudOffsets (+ (* (- centerCounter 1) (POINTS_PER_CLOUD)) pointCounter)))
+  ;;   (centerCounter (list 1 ... (CLOUD_COUNT)))
+  ;;   (pointCounter (list 1 ... (POINTS_PER_CLOUD)))
+  ;; ))
+  ;; (= cloudSizes (+ 1700 (* 1700 (random (* (CLOUD_COUNT) (POINTS_PER_CLOUD)) 8))))
 
-  (= xCloudPoints (comprehension
-    (+ ([] xCloudCenters centerCounter) ([] xCloudOffsets (+ (* (- centerCounter 1) (POINTS_PER_CLOUD)) pointCounter)))
-    (centerCounter cloudCenterLister)
-    (pointCounter cloudPointLister)
-  ))
-  (= yCloudPoints (comprehension
-    (+ ([] yCloudCenters centerCounter) ([] yCloudOffsets (+ (* (- centerCounter 1) (POINTS_PER_CLOUD)) pointCounter)))
-    (centerCounter cloudCenterLister)
-    (pointCounter cloudPointLister)
-  ))
-  (= zCloudPoints (comprehension
-    (+ ([] zCloudCenters centerCounter) ([] zCloudOffsets (+ (* (- centerCounter 1) (POINTS_PER_CLOUD)) pointCounter)))
-    (centerCounter cloudCenterLister)
-    (pointCounter cloudPointLister)
-  ))
-  (= cloudSizes (+ 1700 (* 1700 (random (* (CLOUD_COUNT) (POINTS_PER_CLOUD)) 8))))
+  ;; (= xCloudPoints2 (- (mod (- xCloudPoints xViewPosition -128) 256) 128))
+  ;; (= yCloudPoints2 (- yCloudPoints yViewPosition))
+  ;; (= zCloudPoints2 (- (mod (- zCloudPoints zViewPosition -128) 256) 128))
 
-  (= xCloudPoints2 (- (mod (- xCloudPoints xViewPosition -128) 256) 128))
-  (= yCloudPoints2 (- yCloudPoints yViewPosition))
-  (= zCloudPoints2 (- (mod (- zCloudPoints zViewPosition -128) 256) 128))
+  ;; (= xCloudPointsViewSpace (+ (* xCloudPoints2 xContribToX) (* yCloudPoints2 yContribToX) (* zCloudPoints2 zContribToX)))
+  ;; (= yCloudPointsViewSpace (+ (* xCloudPoints2 xContribToY) (* yCloudPoints2 yContribToY) (* zCloudPoints2 zContribToY)))
+  ;; (= zCloudPointsViewSpace (+ (* xCloudPoints2 xContribToZ) (* yCloudPoints2 yContribToZ) (* zCloudPoints2 zContribToZ)))
 
-  (= xCloudPointsViewSpace (+ (* xCloudPoints2 xContribToX) (* yCloudPoints2 yContribToX) (* zCloudPoints2 zContribToX)))
-  (= yCloudPointsViewSpace (+ (* xCloudPoints2 xContribToY) (* yCloudPoints2 yContribToY) (* zCloudPoints2 zContribToY)))
-  (= zCloudPointsViewSpace (+ (* xCloudPoints2 xContribToZ) (* yCloudPoints2 yContribToZ) (* zCloudPoints2 zContribToZ)))
-
-  (displayMe
-    (project xCloudPointsViewSpace yCloudPointsViewSpace zCloudPointsViewSpace)
-    (colorLatex (rgb 255 255 255))
-    (pointOpacity 1)
-    (pointSize (/ cloudSizes zCloudPointsViewSpace))
-  )
+  ;; (displayMe
+  ;;   (project xCloudPointsViewSpace yCloudPointsViewSpace zCloudPointsViewSpace)
+  ;;   (colorLatex (rgb 255 255 255))
+  ;;   (pointOpacity 1)
+  ;;   (pointSize (/ cloudSizes zCloudPointsViewSpace))
+  ;; )
 
   ;; (displayMe
   ;;   (simpleProject 
@@ -540,109 +542,55 @@
 
 
 
-  (= lensFlareSizes (list 0.5 0.7 1.2 0.2 0.4 0.6))
-  (= lensFlareOffsets (list 0.3 0.5 0.6 1.1 1.4 1.7))
-  (= lensFlareNotOccluded 1)
-  (displayMe
-    (+ 
-      (ifElse (== sunEnabled 1) (point 0 0) (point 9999 9999)) 
-      (- sunPos (* sunPos lensFlareOffsets)) 
-      (piecewise ((== lensFlareNotOccluded 1) (point 0 0)) (point 9999 9999))
-    )
-    (colorLatex (rgb 238 178 93))
-    (pointOpacity 0.3)
-    (pointSize (* 100 lensFlareSizes))
-  )
+  ;; (= lensFlareSizes (list 0.5 0.7 1.2 0.2 0.4 0.6))
+  ;; (= lensFlareOffsets (list 0.3 0.5 0.6 1.1 1.4 1.7))
+  ;; (= lensFlareNotOccluded 1)
+  ;; (displayMe
+  ;;   (+ (- sunPos (* sunPos lensFlareOffsets)) (piecewise ((== lensFlareNotOccluded 1) (point 0 0)) (point 9999 9999)))
+  ;;   (colorLatex (rgb 238 178 93))
+  ;;   (pointOpacity 0.3)
+  ;;   (pointSize (* 100 lensFlareSizes))
+  ;; )
 
-  (= sunEnabled 1)
-  (= sunVector (normalizeList unrotatedSunPos))
-  (= lensFlareTriangleCollisions
-    (comprehension
-      (mullerTrumbore
-        (staticVec3Spread PlayerPositionLensFlareCollisions)
-        ([] sunVector 1) ([] sunVector 2) ([] sunVector 3)
+  ;; (= sunVector (normalizeList (list 3 9 -3)))
+  ;; (= lensFlareTriangleCollisions
+  ;;   (comprehension
+  ;;     (mullerTrumbore
+  ;;       (staticVec3Spread PlayerPositionCollisions)
+  ;;       ([] sunVector 1) ([] sunVector 2) ([] sunVector 3)
 
-        ([] xVBO ([] (TerrainIBO) (+ n 1)))
-        ([] yVBO ([] (TerrainIBO) (+ n 1)))
-        ([] zVBO ([] (TerrainIBO) (+ n 1)))
+  ;;       ([] xVBO ([] (TerrainIBO) (+ n 1)))
+  ;;       ([] yVBO ([] (TerrainIBO) (+ n 1)))
+  ;;       ([] zVBO ([] (TerrainIBO) (+ n 1)))
 
-        ([] xVBO ([] (TerrainIBO) (+ n 2)))
-        ([] yVBO ([] (TerrainIBO) (+ n 2)))
-        ([] zVBO ([] (TerrainIBO) (+ n 2)))
+  ;;       ([] xVBO ([] (TerrainIBO) (+ n 2)))
+  ;;       ([] yVBO ([] (TerrainIBO) (+ n 2)))
+  ;;       ([] zVBO ([] (TerrainIBO) (+ n 2)))
 
-        ([] xVBO ([] (TerrainIBO) (+ n 3)))
-        ([] yVBO ([] (TerrainIBO) (+ n 3)))
-        ([] zVBO ([] (TerrainIBO) (+ n 3)))
-      )
-    (n (- ([] listCompIndexingListForVBO
-      (+ (floor (* (/ (length listCompIndexingListForVBO) 10) (mod lensFlareFrameCount 10))) 1)
-      ...
-      (floor (* (/ (length listCompIndexingListForVBO) 10) (+ (mod lensFlareFrameCount 10) sunEnabled)))
-    ) 3)))
-  )
-  (= lensFlareOcclusionChecker (length ([] lensFlareTriangleCollisions (> lensFlareTriangleCollisions 0))))
+  ;;       ([] xVBO ([] (TerrainIBO) (+ n 3)))
+  ;;       ([] yVBO ([] (TerrainIBO) (+ n 3)))
+  ;;       ([] zVBO ([] (TerrainIBO) (+ n 3)))
+  ;;     )
+  ;;   (n (- ([] listCompIndexingListForVBO
+  ;;     (+ (floor (* (/ (length listCompIndexingListForVBO) 10) (mod frameCount 10))) 1)
+  ;;     ...
+  ;;     (floor (* (/ (length listCompIndexingListForVBO) 10) (+ (mod frameCount 10) 1)))
+  ;;   ) 3)))
+  ;; )
+  ;; (= lensFlareOcclusionChecker (length ([] lensFlareTriangleCollisions (> lensFlareTriangleCollisions 0))))
   (= shouldOccludeLensFlare 0)
 )
 
 (folder ((title "Grass"))
-
-  ;; (= VBOGrassFilter
-  ;;   ([] VBOFaceFilter (
-  ;;     ==
-  ;;     (piecewise ((> ([] gVBO VBOFaceFilter) 150)
-  ;;       (piecewise ((< ([] VBOViewSpaceDepths VBOFaceFilter) (piecewise ((== grassEnabled 1) 130) (0))) 1) (0))
-  ;;     ) (0))
-  ;;     1
-  ;;   ))
-  ;; )
-  ;; (= barycentricSum (+ (random 4500 1) (random 4500 2) (random 4500 3)))
-  ;; (= barycentricRandoms1 (/ (random 4500 1) barycentricSum))
-  ;; (= barycentricRandoms2 (/ (random 4500 2) barycentricSum))
-  ;; (= barycentricRandoms3 (/ (random 4500 3) barycentricSum))
-  ;; (defineFindAndReplace getGrassPositionCoord coord
-  ;;   ((= (concatTokens coord GrassPositions)
-  ;;     (comprehension
-  ;;       (+
-  ;;         (* ([] (concatTokens coord VBOViewSpace) ([] (TerrainIBO) (+ n4 1))) ([] barycentricRandoms1 (+ n3 (* 1 n4))))
-  ;;         (* ([] (concatTokens coord VBOViewSpace) ([] (TerrainIBO) (+ n4 2))) ([] barycentricRandoms2 (+ n3 (* 1 n4))))
-  ;;         (* ([] (concatTokens coord VBOViewSpace) ([] (TerrainIBO) (+ n4 3))) ([] barycentricRandoms3 (+ n3 (* 1 n4))))
-  ;;       )
-  ;;       (n4 (* 3 (- VBOGrassFilter 1))) (n3 (list 1 ... 40))
-  ;;     )
-  ;;   ))
-  ;; )
-  ;; (getGrassPositionCoord x)
-  ;; (getGrassPositionCoord y)
-  ;; (getGrassPositionCoord z)
-
-  ;; (fn simpleProject x y z (point (/ x z) (+ (/ y z) (piecewise ((> z 0) 0) ((/ 0 0))))))
-
-  ;; (fn offsetGrass noise (* 0.01 (sin (+ (* 0.03 noise)))))
-  ;; (displayMe
-  ;;   (comprehension
-  ;;     (polygon
-  ;;       (simpleProject ([] xGrassPositions grassPosIndexer) ([] yGrassPositions grassPosIndexer) ([] zGrassPositions grassPosIndexer))
-  ;;       (simpleProject (+ ([] xGrassPositions grassPosIndexer) -0.005 (offsetGrass grassPosIndexer)) (+ ([] yGrassPositions grassPosIndexer) 0.05) ([] zGrassPositions grassPosIndexer))
-  ;;       (simpleProject (+ ([] xGrassPositions grassPosIndexer) 0.01) (+ ([] yGrassPositions grassPosIndexer) 0.015)([] zGrassPositions grassPosIndexer))
-  ;;       (simpleProject (+ ([] xGrassPositions grassPosIndexer) 0.015 (offsetGrass grassPosIndexer)) (+ ([] yGrassPositions grassPosIndexer) 0.05) ([] zGrassPositions grassPosIndexer))
-  ;;       (simpleProject (+ ([] xGrassPositions grassPosIndexer) 0.02) (+ ([] yGrassPositions grassPosIndexer) 0.015)([] zGrassPositions grassPosIndexer))
-  ;;       (simpleProject (+ ([] xGrassPositions grassPosIndexer) 0.035 (offsetGrass grassPosIndexer)) (+ ([] yGrassPositions grassPosIndexer) 0.05) ([] zGrassPositions grassPosIndexer))
-  ;;       (simpleProject (+ ([] xGrassPositions grassPosIndexer) 0.03) (+ ([] yGrassPositions grassPosIndexer) 0.0)([] zGrassPositions grassPosIndexer))
-  ;;     )
-  ;;     (grassPosIndexer (list 1 ... (length xGrassPositions)))
-  ;;   )
-  ;;   (lines false)
-  ;;   (colorLatex (rgb 0 255 0))
-  ;;   (fillOpacity 1)
-  ;; )
 )
 
+; bottleneck?
 (folder ((title "Checkpoints"))
   (staticVec3 StartPlayerPosition 0 0 -1)
   (staticVec3 StartPlayerVelocity 0 0 0)
   (= xStartPlayerRotation -1.5)
   (= yStartPlayerRotation -0.1)
-  (= unlockedCheckpoints (list 1 1 0))
+  (= unlockedCheckpoints (list 1 1 1))
   (= bronzeThresholds (list 66 70 70))
   (= silverThresholds (list 58 65 63))
   (= goldThresholds (list 52 60 56))
@@ -652,12 +600,12 @@
     (-> (x3 PlayerPosition) (x3 StartPlayerPosition))
     (-> (y3 PlayerPosition) (y3 StartPlayerPosition))
     (-> (z3 PlayerPosition) (z3 StartPlayerPosition))
-    (-> (x3 PlayerPositionLensFlareCollisions) (x3 StartPlayerPosition))
-    (-> (y3 PlayerPositionLensFlareCollisions) (y3 StartPlayerPosition))
-    (-> (z3 PlayerPositionLensFlareCollisions) (z3 StartPlayerPosition))
-    (-> (x3 PrevPlayerPositionLensFlareCollisions) (x3 StartPlayerPosition))
-    (-> (y3 PrevPlayerPositionLensFlareCollisions) (y3 StartPlayerPosition))
-    (-> (z3 PrevPlayerPositionLensFlareCollisions) (z3 StartPlayerPosition))
+    (-> (x3 PlayerPositionCollisions) (x3 StartPlayerPosition))
+    (-> (y3 PlayerPositionCollisions) (y3 StartPlayerPosition))
+    (-> (z3 PlayerPositionCollisions) (z3 StartPlayerPosition))
+    (-> (x3 PrevPlayerPositionCollisions) (x3 StartPlayerPosition))
+    (-> (y3 PrevPlayerPositionCollisions) (y3 StartPlayerPosition))
+    (-> (z3 PrevPlayerPositionCollisions) (z3 StartPlayerPosition))
     (-> (x3 PlayerPositionFrequentCollisions) (x3 StartPlayerPosition))
     (-> (y3 PlayerPositionFrequentCollisions) (y3 StartPlayerPosition))
     (-> (z3 PlayerPositionFrequentCollisions) (z3 StartPlayerPosition))
@@ -895,8 +843,8 @@
   ;; (= playerPositionForCollisions (list 0 0 0))
   ;; (= previousPlayerPositionForCollisions (list 0 0 0))
   (= terrainLoadingViewerPosition (list 0 0 0))
-  (staticVec3 PlayerPositionLensFlareCollisions 0 0 0)
-  (staticVec3 PrevPlayerPositionLensFlareCollisions 0 0 0)
+  (staticVec3 PlayerPositionCollisions 0 0 0)
+  (staticVec3 PrevPlayerPositionCollisions 0 0 0)
   (staticVec3 PlayerPositionFrequentCollisions 0 0 0)
   (staticVec3 PrevPlayerPositionFrequentCollisions 0 0 0)
   (= ppcOffsetMag (distance
@@ -910,7 +858,7 @@
   )
   ;; (= triangleCollisions (
   ;;   mullerTrumbore
-  ;;   (staticVec3Spread PrevPlayerPositionLensFlareCollisions)
+  ;;   (staticVec3Spread PrevPlayerPositionCollisions)
   ;;   (staticVec3Spread)
   ;; ))
   (= triangleCollisions
@@ -932,27 +880,27 @@
         ([] zVBO ([] (TerrainIBO) (+ n 3)))
       )
     (n (- ([] listCompIndexingListForVBO
-      (+ (floor (* (/ (length listCompIndexingListForVBO) 4) (mod frameCount 4))) 1)
+      (+ (floor (* (/ (length listCompIndexingListForVBO) 10) (mod frameCount 10))) 1)
       ...
-      (floor (* (/ (length listCompIndexingListForVBO) 4) (+ (mod frameCount 4) 1)))
+      (floor (* (/ (length listCompIndexingListForVBO) 10) (+ (mod frameCount 10) 1)))
     ) 3)))
   )
   (= nearestTriangleCollision (min ([] triangleCollisions (> triangleCollisions 0))))
 
-  (defineFindAndReplace singlePlanePhysicsStep Pos1 Vel1 Pos2 Vel2 timestep
-    (
-      (= (x3 Pos2) (+ (x3 Pos1) (* (x3 Vel1) timestep)))
-      (= (y3 Pos2) (+ (y3 Pos1) (* (y3 Vel1) timestep)))
-      (= (z3 Pos2) (+ (z3 Pos1) (* (z3 Vel1) timestep)))
-      (= (x3 Vel2) (+ (* (x3 Vel1) (^ 0.9997 timestep)) (* timestep (x3 ForceOnPlayer))))
-      (= (y3 Vel2) (+ (* (y3 Vel1) (^ 0.9997 timestep)) (* timestep (y3 ForceOnPlayer))))
-      (= (z3 Vel2) (+ (* (z3 Vel1) (^ 0.9997 timestep)) (* timestep (z3 ForceOnPlayer))))
-    )
-  )
+  ;; (defineFindAndReplace singlePlanePhysicsStep Pos1 Vel1 Pos2 Vel2 timestep
+  ;;   (
+  ;;     (= (x3 Pos2) (+ (x3 Pos1) (* (x3 Vel1) timestep)))
+  ;;     (= (y3 Pos2) (+ (y3 Pos1) (* (y3 Vel1) timestep)))
+  ;;     (= (z3 Pos2) (+ (z3 Pos1) (* (z3 Vel1) timestep)))
+  ;;     (= (x3 Vel2) (+ (* (x3 Vel1) (^ 0.9997 timestep)) (* timestep (x3 ForceOnPlayer))))
+  ;;     (= (y3 Vel2) (+ (* (y3 Vel1) (^ 0.9997 timestep)) (* timestep (y3 ForceOnPlayer))))
+  ;;     (= (z3 Vel2) (+ (* (z3 Vel1) (^ 0.9997 timestep)) (* timestep (z3 ForceOnPlayer))))
+  ;;   )
+  ;; )
 
-  (singlePlanePhysicsStep PlayerPosition PlayerVelocity PlayerPositionStep1 PlayerVelocityStep1 physicsTimestep)
-  (singlePlanePhysicsStep PlayerPositionStep1 PlayerVelocityStep1 PlayerPositionStep2 PlayerVelocityStep2 physicsTimestep)
-  (singlePlanePhysicsStep PlayerPositionStep2 PlayerVelocityStep2 PlayerPositionStep3 PlayerVelocityStep3 physicsTimestep)
+  ;(singlePlanePhysicsStep PlayerPosition PlayerVelocity PlayerPositionStep1 PlayerVelocityStep1 physicsTimestep)
+  ;(singlePlanePhysicsStep PlayerPositionStep1 PlayerVelocityStep1 PlayerPositionStep2 PlayerVelocityStep2 physicsTimestep)
+  ;(singlePlanePhysicsStep PlayerPositionStep2 PlayerVelocityStep2 PlayerPositionStep3 PlayerVelocityStep3 physicsTimestep)
 )
 
 (folder ((title "Controls"))
@@ -997,6 +945,7 @@
   )
 )
 
+; another possible bottleneck (not sure how though)?
 (folder ((title "UI Menus"))
   (defineFindAndReplace pcPhone pcOption phoneOption ((piecewise ((== phoneModeEnabled 1) phoneOption) (pcOption))))
   (defineFindAndReplace showPointPredicate position predicate ((piecewise (predicate position) ((point 1000 1000)))))
@@ -1325,9 +1274,8 @@
   ;; ))
   (= grassEnabled 0)
   (UIButtonToggle "Phone Mode" (== gameState GAMESTATE_SETTINGS_MENU) (point -0.6 0.6) (point 0.6 0.4) 0.75 phoneModeEnabled)
-  (UIButtonToggle "Grass" (== gameState GAMESTATE_SETTINGS_MENU) (point -0.6 0.4) (point 0.6 0.2) 0.75 grassEnabled)
-  (UIButtonToggle "Sun" (== gameState GAMESTATE_SETTINGS_MENU) (point -0.6 0.2) (point 0.6 0.0) 0.75 sunEnabled)
-  (UIButtonToggle "Clouds" (== gameState GAMESTATE_SETTINGS_MENU) (point -0.6 0.0) (point 0.6 -0.2) 0.75 settingsCloudsEnabled)
+  ;; (UIButtonToggle "Grass" (== gameState GAMESTATE_SETTINGS_MENU) (point -0.6 0.4) (point 0.6 0.2) 0.75 grassEnabled)
+  ;; (UIButtonToggle "Clouds" (== gameState GAMESTATE_SETTINGS_MENU) (point -0.6 0.2) (point 0.6 0.0) 0.75 settingsCloudsEnabled)
   (UIButton "Back" (== gameState GAMESTATE_SETTINGS_MENU) (point -1 0.7) (point -0.8 0.5) 1 (,
     (-> gameState GAMESTATE_MAIN_MENU)
   ))
@@ -1361,7 +1309,6 @@
   (= gameState GAMESTATE_MAIN_MENU)
 
   (= frameCount 0)
-  (= lensFlareFrameCount 0)
 
   (= levelTimeElapsed 0)
 
@@ -1390,28 +1337,28 @@
                 )
               )
             )
-            (-> physicsTimestep (/ deltaTime 3))
+            (-> physicsTimestep (/ deltaTime 1))
             (-> xPlayerRotation (- xPlayerRotation (* deltaTime (.x joystickDeltaRotation))))
             (-> yPlayerRotation (+ yPlayerRotation (* deltaTime (.y joystickDeltaRotation))))
             (-> averageDeltaTime (+ (* averageDeltaTime 0) (* (* deltaTime 1000) 1)))
-            ;(-> (x3 PlayerVelocity) (+ (* (^ 0.9997 deltaTime) (x3 PlayerVelocity)) (* deltaTime (x3 ForceOnPlayer))))
-            ;(-> (y3 PlayerVelocity) (+ (* (^ 0.9997 deltaTime) (y3 PlayerVelocity)) (* deltaTime (y3 ForceOnPlayer))))
-            ;(-> (z3 PlayerVelocity) (+ (* (^ 0.9997 deltaTime) (z3 PlayerVelocity)) (* deltaTime (z3 ForceOnPlayer))))
-            ;(-> (x3 PlayerPosition) (+ (x3 PlayerPosition) (* deltaTime (x3 PlayerVelocity))))
-            ;(-> (y3 PlayerPosition) (+ (y3 PlayerPosition) (* deltaTime (y3 PlayerVelocity))))
-            ;(-> (z3 PlayerPosition) (+ (z3 PlayerPosition) (* deltaTime (z3 PlayerVelocity))))
-            (-> (x3 PlayerPosition) (x3 PlayerPositionStep3))
-            (-> (y3 PlayerPosition) (y3 PlayerPositionStep3))
-            (-> (z3 PlayerPosition) (z3 PlayerPositionStep3))
-            (-> (x3 PlayerVelocity) (x3 PlayerVelocityStep3))
-            (-> (y3 PlayerVelocity) (y3 PlayerVelocityStep3))
-            (-> (z3 PlayerVelocity) (z3 PlayerVelocityStep3))
+            (-> (x3 PlayerVelocity) (+ (* (^ 0.9997 deltaTime) (x3 PlayerVelocity)) (* deltaTime (x3 ForceOnPlayer))))
+            (-> (y3 PlayerVelocity) (+ (* (^ 0.9997 deltaTime) (y3 PlayerVelocity)) (* deltaTime (y3 ForceOnPlayer))))
+            (-> (z3 PlayerVelocity) (+ (* (^ 0.9997 deltaTime) (z3 PlayerVelocity)) (* deltaTime (z3 ForceOnPlayer))))
+            (-> (x3 PlayerPosition) (+ (x3 PlayerPosition) (* deltaTime (x3 PlayerVelocity))))
+            (-> (y3 PlayerPosition) (+ (y3 PlayerPosition) (* deltaTime (y3 PlayerVelocity))))
+            (-> (z3 PlayerPosition) (+ (z3 PlayerPosition) (* deltaTime (z3 PlayerVelocity))))
+            ;; (-> (x3 PlayerPosition) (x3 PlayerPositionStep1))
+            ;; (-> (y3 PlayerPosition) (y3 PlayerPositionStep1))
+            ;; (-> (z3 PlayerPosition) (z3 PlayerPositionStep1))
+            ;; (-> (x3 PlayerVelocity) (x3 PlayerVelocityStep1))
+            ;; (-> (y3 PlayerVelocity) (y3 PlayerVelocityStep1))
+            ;; (-> (z3 PlayerVelocity) (z3 PlayerVelocityStep1))
             (piecewise (
               (< nearestTriangleCollision ppcOffsetMag)
               (-> gameState GAMESTATE_CRASH)
             ))
             (piecewise
-              ((== (mod frameCount 4) 0)
+              ((== (mod frameCount 10) 0)
                 (,          
                   (-> xPlayerPositionFrequentCollisions xPlayerPosition)
                   (-> yPlayerPositionFrequentCollisions yPlayerPosition)
@@ -1424,19 +1371,13 @@
             )
             (piecewise
               ((== (mod frameCount 10) 0)
-                (, 
-                  (piecewise
-                    ((== sunEnabled 1)
-                      (, 
-                        (-> xPlayerPositionLensFlareCollisions xPlayerPosition)
-                        (-> yPlayerPositionLensFlareCollisions yPlayerPosition)
-                        (-> zPlayerPositionLensFlareCollisions zPlayerPosition)
-                        (-> xPrevPlayerPositionLensFlareCollisions xPlayerPositionLensFlareCollisions)
-                        (-> yPrevPlayerPositionLensFlareCollisions yPlayerPositionLensFlareCollisions)
-                        (-> zPrevPlayerPositionLensFlareCollisions zPlayerPositionLensFlareCollisions)
-                      )
-                    )
-                  )
+                (,          
+                  (-> xPlayerPositionCollisions xPlayerPosition)
+                  (-> yPlayerPositionCollisions yPlayerPosition)
+                  (-> zPlayerPositionCollisions zPlayerPosition)
+                  (-> xPrevPlayerPositionCollisions xPlayerPositionCollisions)
+                  (-> yPrevPlayerPositionCollisions yPlayerPositionCollisions)
+                  (-> zPrevPlayerPositionCollisions zPlayerPositionCollisions)
                 )
               )
               ((== (mod frameCount 10) 1)
@@ -1491,12 +1432,7 @@
       )
       (-> frameCount (+ frameCount 1))
       (piecewise
-        ((== sunEnabled 1)
-          (-> lensFlareFrameCount (+ lensFlareFrameCount 1))
-        )
-      )
-      (piecewise
-        ((== (mod frameCount 13) 0)
+        ((== (mod frameCount 10) 0)
           (,
             (-> terrainLoadingViewerPosition
               (list xPlayerPosition yPlayerPosition zPlayerPosition)
@@ -1504,15 +1440,15 @@
           )
         )
       )
-      (piecewise
-        ((== (mod frameCount 10) 9)
-          (,
-            (-> lensFlareNotOccluded (- 1 (min 1 (+ shouldOccludeLensFlare lensFlareOcclusionChecker))))
-            (-> shouldOccludeLensFlare 0)
-          )
-        )
-        ((-> shouldOccludeLensFlare (min 1 (+ shouldOccludeLensFlare lensFlareOcclusionChecker))))
-      )
+      ;; (piecewise
+      ;;   ((== (mod frameCount 10) 9)
+      ;;     (,
+      ;;       (-> lensFlareNotOccluded (- 1 (min 1 (+ shouldOccludeLensFlare lensFlareOcclusionChecker))))
+      ;;       (-> shouldOccludeLensFlare 0)
+      ;;     )
+      ;;   )
+      ;;   ((-> shouldOccludeLensFlare (min 1 (+ shouldOccludeLensFlare lensFlareOcclusionChecker))))
+      ;; )
     )
   )
 )
