@@ -1,550 +1,168 @@
-import { ExpressionCompiler } from "./expression-compiler.js"
-import { getTokenType, token, tokenTypes, extractStringFromLiteral,
-DesmosState, ParametricDomain, DesmosExpression, ASTNode } from "./compiler-utils.js";
+import { 
+  LISPsmosFailure, Maybe, ASTNode, getFailureMaybe, 
+  makeInternalASTNode, success, ASTInternalNode, CodeLocation,
+  ASTMap, Compiler, MacroFunction, ResourceImporter,
+  CompilerOptions
+} from "./common.js";
+import { lex, parse } from "./lexer-and-parser.js";
+import { State } from "./state.js";
 
-let defaultMacroRegex = /a^/y;
+function hasChildren(astNode: ASTNode) {
+  return Array.isArray(astNode.content);
+}
 
-let macros;
+function copyCodeLocation(codeLoc: CodeLocation): CodeLocation {
+  return Object.assign({}, codeLoc);
+}
 
-let possibleLabelOrientations = [
-  "default",
-  "center",
-  "center_auto",
-  "auto_center",
-  "above",
-  "above_left",
-  "above_right",
-  "above_auto",
-  "below",
-  "below_left",
-  "below_right",
-  "below_auto",
-  "left",
-  "auto_left",
-  "right",
-  "auto_right"];
+type ASTMapFunction = (astNode: ASTNode, i: number, arr?: ASTInternalNode[]) => Promise<ASTNode[]>;
+async function mapASTNode(astNode: ASTInternalNode, fn: ASTMapFunction): Promise<ASTInternalNode> {
+  let newContent = astNode.content.map(fn);
+  let resolvedNewContent = (await Promise.all(newContent)).flat(1);
+  return Object.assign(copyCodeLocation(astNode), {
+    content: resolvedNewContent,
+    tokenType: astNode.tokenType,
+    nodeType: astNode.nodeType
+  });
+}
 
-export function stringToTokenStream(str: string): string[][] {
-  let index = 0;
-  let tokens = [];
-  while (index < str.length) {
-    let matched = false;
-    for (const [tokenName, tokenRegexp] of tokenTypes) {
-      tokenRegexp.lastIndex = index;
-      //@ts-ignore
-      let matches = tokenRegexp[Symbol.match](str);
-      if (matches !== null) {
-        let match = matches[0];
-        tokens.push([tokenName, match]);
-        index += match.length;
-        matched = true;
-        break;
-      }
-    }
-    if (!matched) {
-      throw new Error(`Lexing Failed: SyntaxError starting at the following character: ${str.slice(index, Math.min(str.length,index+100))}`);
-    }
+function unpack<T>(maybeValue: Maybe<T>): T {
+  if (!maybeValue.success) {
+    let failure = maybeValue.data as LISPsmosFailure;
+    throw new Error(`Lines ${failure.startLineNo}-${failure.endLineNo}; Cols ${failure.startColNo}-${failure.endColNo}; LISPsmos ${failure.category.toUpperCase()} ERROR: ${failure.reason}`);
   }
-  return tokens;
+  return maybeValue.data as T;
 }
 
 
-
-
-
-export function tokenStreamToAST(tokenStream: string[][]) {
-  return _tokenStreamToAST(tokenStream.filter(e => e[0] != "whitespace").map(e => e[1]));
-}
-
-function _tokenStreamToAST(tokenStream: string[]) {
-  let astStack: Array<ASTNode>[] = [[]];
-  for (let tokenValue of tokenStream) {
-    let tokenType = getTokenType(tokenValue);
-    switch (tokenType) {
-    case "parenthesis":
-      switch (tokenValue) {
-      case "(":
-        let newList: ASTNode = [];
-        astStack[astStack.length-1].push(newList);
-        astStack.push(newList);
-        break;
-      case ")":
-        astStack.pop();
-        break;
-      }
-    case "whitespace":
-      break;
-    default: astStack[astStack.length-1].push(tokenValue);
-      break;
+async function preprocess(ast: ASTNode, compiler: Compiler): Promise<Maybe<ASTNode[]>> {
+  if (ast.nodeType == "internal") {
+    //console.log(ast);
+    let headNode = ast.content[0];
+    if (headNode.nodeType == "internal") {
+      return getFailureMaybe(ast, "syntax", "Expression must start with some sort of operation, not a list!");
     }
-  }
-  return astStack[0];
-}
-
-
-
-
-
-
-
-
-
-export type MacroFunc = (ast: ASTNode[], compiler: LispsmosCompiler) => ASTNode[];
-export type ResourceGathererFunc = (ast: ASTNode[], compiler: LispsmosCompiler) => Promise<void>;
-
-export type ImportResult = { success: boolean, payload: any };
-export type ImportFunction = (compiler: LispsmosCompiler, location: string) => Promise<ImportResult>;
-
-export type CompilerHandler = (compiler: LispsmosCompiler) => void;
-
-export class LispsmosCompiler {
-  macros: Map<string, MacroFunc>;
-  resourceGatherers: Map<string, ResourceGathererFunc>;
-  macroState: any;
-  shouldReapplyMacros: boolean;
-  expressionCompiler: ExpressionCompiler;
-  currentExpressionID: number;
-  currentFolderID: number;
-  desmosState: DesmosState;
-  ast: ASTNode;
-  events: {
-    init: Function[];
-  }
-  importers: ImportFunction[];
-  pendingResourceGatherers: Promise<void>[];
-
-  constructor () {
-    this.importers = [];
-    this.macros = new Map();
-    this.resourceGatherers = new Map();
-    this.events = {
-      init: []
-    };
-  }
-
-  async compile(src: string): Promise<DesmosState> {
-    this.pendingResourceGatherers = [];
-    this.macroState = {};
-    this.events.init.forEach(fn => {
-      fn(this);
-    });
-    await this.compileAST(tokenStreamToAST(stringToTokenStream(src)));
-    console.log(this.desmosState);
-    return this.desmosState;
-  }
-
-  registerResourceGatherer(resourceGathererName: string, resourceGathererFn: ResourceGathererFunc): void {
-    if (this.resourceGatherers.get(resourceGathererName)) {
-      throw new Error(`LISPsmos Error: Resource Gatherer ${resourceGathererName} is already defined!`);
-    }
-    this.resourceGatherers.set(resourceGathererName, resourceGathererFn);
-  }
-
-  registerMacro(macroName: string, macroFn: MacroFunc): void {
-    if (this.macros.get(macroName)) {
-      throw new Error(`LISPsmos Error: Macro ${macroName} is already defined!`);
-    }
-    this.macros.set(macroName, macroFn);
-  }
-
-  registerImporter(importerFn: ImportFunction) {
-    this.importers.push(importerFn);
-  };
-
-  async import(location: string): Promise<ImportResult> {
-    for (let importerFn of this.importers) {
-      let result = await importerFn(this, location);
-      if (result.success) {
-        return result;
-      }
-    }
-    return { success: false, payload: undefined };
-  }
-
-  registerEvent(eventName: "init", handler: CompilerHandler): void {
-    this.events[eventName].push(handler);
-  }
-
-  async compileAST(ast: ASTNode) {
-    //image importer setup
-    this.macroState.images = {};
-    this.registerResourceGatherer("image", async (ast, compiler) => {
-      let imageURL = ast[1];
-      if (Array.isArray(imageURL)) {
-        throw new Error("LISPsmos Error: Image URL cannot be list!");
-      }
-      imageURL = extractStringFromLiteral(imageURL);
-      return new Promise<void>((resolve, reject) => {
-        let img = new Image();
-        img.crossOrigin = "Anonymous";
-        img.onload = () => {
-          let canvas = document.createElement("canvas");
-          let ctx = canvas.getContext("2d");
-          canvas.width = img.width;
-          canvas.height = img.height;
-          ctx.drawImage(img, 0, 0);
-          this.macroState.images[imageURL as string] = canvas.toDataURL(); 
-          resolve();
-        }
-        img.src = (imageURL as string);
-      });
-    });
-
-    //setup
-    this.ast = ast;
-    this.currentExpressionID = 0;
-    this.currentFolderID = undefined;
-    this.desmosState = {
-      "version": 9,
-      "randomSeed": "f8731634d5d57a05dabd714121ac9b91",
-      "graph": {
-        "viewport": {
-          "xmin": -10,
-          "ymin": -10,
-          "xmax": 10,
-          "ymax": 10
-        }
-      },
-      "expressions": {
-        "list": [
-        ]
-      }
-    };
-
-    //preprocessing
-    this.shouldReapplyMacros = true;
-    while (this.shouldReapplyMacros) {
-      this.shouldReapplyMacros = false;
-      this.gatherResources(this.ast);
-      await Promise.all(this.pendingResourceGatherers);
-      this.ast = this.applyMacros(this.ast);
-    }
-    console.log("FINISHED PREPROCESSING STEP");
-    console.log(this.ast);
-    //gather resources
-
-    //create expression compiler
-    this.expressionCompiler = new ExpressionCompiler();
-
-    this.astNodeToDesmosState(this.ast);
-    return this.desmosState;
-  }
-
-  gatherResources(ast: ASTNode): void {
-    if (Array.isArray(ast)) {
-      switch (typeof ast[0]) {
-        case "string":
-          let resourceGatherer = this.resourceGatherers.get(ast[0]);
-          if (typeof resourceGatherer == "function") {
-            this.pendingResourceGatherers.push(resourceGatherer(ast, this));
-            
-          }
-          break;
-      }
-      for (let astChild of ast) {
-        this.gatherResources(astChild);
-      }
-    }
-  }
-
-  applyMacros(ast: ASTNode): ASTNode {
-    return this.applyMacrosInternal(ast);
-  }
-  
-  applyMacrosInternal(ast: ASTNode): ASTNode {
-    if (Array.isArray(ast)) {
-      switch (typeof ast[0]) {
-        case "string":
-          if (typeof this.macros.get(ast[0]) == "function") {
-            this.shouldReapplyMacros = true;
-            return this.macros.get(ast[0])(ast, this);
-          } else {
-            let newAST: ASTNode = [];
-            for (let astChild of ast) {
-              newAST = newAST.concat(this.applyMacrosInternal(astChild));
-            }
-            return [newAST];
-          }
-        case "object":
-          let newAST: ASTNode = [];
-          for (let astChild of ast) {
-            newAST = newAST.concat(this.applyMacrosInternal(astChild));
-          }
-          return [newAST];
-      }
+    let macro = compiler.macros.get(headNode.content);
+    let maybeNewAST: Maybe<ASTNode[]> = success([ast]);
+    let newAST: ASTNode[] = [ast];
+    if (macro) {
+      maybeNewAST = await macro(ast, compiler);
+      newAST = unpack(maybeNewAST);
+      return success((await Promise.all(newAST.map(newASTChild => preprocess(newASTChild, compiler)))).map(e => unpack(e)).flat(1));
     } else {
-      return ast;
+      return success([await mapASTNode(ast, async (astChild, index): Promise<ASTNode[]> => {
+        return unpack(await preprocess(astChild, compiler));
+      })]);
+
+      
     }
+    // newAST = await Promise.all(newAST.map(async newASTNode => {
+    //   if (newASTNode.nodeType == "internal") {
+    //     await mapASTNode(newASTNode, async (astChild, index) => {
+    //       if (astChild.nodeType == "internal") {
+    //         return unpack(await preprocess(astChild, compiler));
+    //       }
+    //       return astChild;
+    //     });
+    //   }
+    // }))
+    //return success([newAST]);
+  } else {
+    return success([ast]);
   }
+}
 
-  astNodeToDesmosState(astNode: ASTNode) {
-    if (Array.isArray(astNode)) {
-        switch (typeof astNode[0]) {
-          case "string":
-            switch (astNode[0]) {
-              case "displayMe":
-                this.desmosState.expressions.list.push(this.astNodeToDisplayedExpression(astNode))
-                break;
-              case "ticker":
-                this.desmosState.expressions.ticker = {
-                  handlerLatex: this.expressionCompiler.astNodeToDesmosExpressions(astNode[1]), open: true
-                };
-                break;
-              case "viewport":
-                if (astNode.length != 5) {
-                  throw new Error("LISPsmos Error: Viewport bounds must be specified as four numbers!");
-                }
-                if (!astNode.slice(1).every(v => (typeof v == "string"))) {
-                  throw new Error("LISPsmos Error: Viewport bounds must be strings!");
-                }
-                let astNodeStr = (astNode as string[]);
-                this.desmosState.graph.viewport = {
-                  xmin: parseFloat(astNodeStr[1]),
-                  xmax: parseFloat(astNodeStr[2]),
-                  ymin: parseFloat(astNodeStr[3]),
-                  ymax: parseFloat(astNodeStr[4]),
-                }
-                break;
-              case "folder":
-                this.astNodeToFolder(astNode);
-                break;
-              case "image":
-                this.astNodeToImage(astNode);
-                break;
-              default:
-                let defaultExpression: DesmosExpression = {
-                  "hidden": true,
-                  "type": "expression",
-                  "id": (this.currentExpressionID++).toString(),
-                  "color": "#000000",
-                  "latex": this.expressionCompiler.astNodeToDesmosExpressions(astNode)
-                };
-                if (this.currentFolderID !== undefined) {
-                  defaultExpression.folderId = this.currentFolderID.toString();
-                }
-                this.desmosState.expressions.list.push(defaultExpression);
-                break;
-            }
-            //outStr += astListToDesmosExpressions(astNode);
-            break;
-          case "object":
-            for (let astChildNode of astNode) {
-              this.astNodeToDesmosState(astChildNode);
-            }
-            break;
-        }
-    } else {
-        throw new Error("LISPsmos Error: No top level primitives (i might have screwed up the implementation for this.). Offending section: "+ astNode);
-        //outStr += astPrimitiveToDesmos(astNode);
-    }
-    //return outObj;
-  }
 
-  astNodeToImage(astNode: Array<ASTNode>) {
-    
-    let imageState: DesmosExpression = {
-      type: "image",
-      id: (this.currentExpressionID++).toString()
-    };
-
-    let imageSource = astNode[1];
-    if (Array.isArray(imageSource)) {
-      throw new Error("LISPsmos Error: Image source cannot be a list!");
-    }
-    imageState.image_url = this.macroState.images[extractStringFromLiteral(imageSource)];
-
-    if (!Array.isArray(astNode[2])) {
-      throw new Error("LISPsmos Error: Image settings must be a list!");
-    }
-    for (let astChild of astNode[2]) {
-      switch (astChild[0]) {
-        case "name":
-          if (Array.isArray(astChild[1])) {
-            throw new Error("LISPsmos Error: Image must be a string!");
-          }
-          imageState.name = extractStringFromLiteral(astChild[1]);
-          break;
-        case "center":
-        case "width":
-        case "height":
-          imageState[astChild[0]] = this.expressionCompiler.astNodeToDesmosExpressions(astChild[1]);
-          break;
-        case "draggable":
-        case "foreground":
-          imageState[astChild[0]] = astChild[1] == "true";
-          break;
-        default:
-          throw new Error(`LISPsmos Error: Unknown image setting '${astChild[0]}'`)
-      }
-    }
-    
-    this.desmosState.expressions.list.push(imageState);
-  }
-
-  astNodeToFolder(astNode: Array<ASTNode>) {
-    if (this.currentFolderID != undefined) throw new Error("No nested folders!");
-
-    let folderState: DesmosExpression = {
-      type: "folder",
-      id: (this.currentExpressionID++).toString(),
-      collapsed: true
-    };
-
-    if (!Array.isArray(astNode[1])) {
-      throw new Error("Folder settings must be a list!");
-    }
-    for (let astChild of astNode[1]) {
-      switch (astChild[0]) {
-        case "title":
-          if (Array.isArray(astChild[1])) {
-            throw new Error("Folder title must be a string!");
-          }
-          folderState.title = extractStringFromLiteral(astChild[1]);
-          break;
-        case "expanded":
-          folderState.collapsed = false;
-          break;
-        default:
-          throw new Error(`LISPsmos Error: Unknown folder setting ${astChild[0]}`)
-      }
-    }
-    
-    this.currentFolderID = parseInt(folderState.id);
-    this.desmosState.expressions.list.push(folderState);
-    for (let astChild of astNode.slice(2)) {
-      this.astNodeToDesmosState(astChild);
-    }
-    this.currentFolderID = undefined;
-  }
-
-  astNodeToDisplayedExpression(astNode: Array<ASTNode>) {
-    let defaultExpression: DesmosExpression = {
-      "type": "expression",
-      "id": (this.currentExpressionID++).toString(),
-      "color": "#000000",
-      "latex": this.expressionCompiler.astNodeToDesmosExpressions(astNode[1]),
-    }
-    if (this.currentFolderID !== undefined) {
-      defaultExpression.folderId = this.currentFolderID.toString();
-    }
-    for (let astChild of astNode.slice(2)) {
-      switch (astChild[0]) {
-        case "lineOpacity":
-        case "lineWidth":
-        case "pointOpacity":
-        case "pointSize":
-        case "colorLatex":
-        case "fillOpacity":
-        case "labelSize":
-          defaultExpression[astChild[0]] = this.expressionCompiler.astNodeToDesmosExpressions(astChild[1]);
-          break;
-        case "label":
-          if (Array.isArray(astChild[1])) throw new Error("LISPsmos Error: Expression label cannot be a list!");
-          defaultExpression[astChild[0]] = extractStringFromLiteral(astChild[1]);
-          break;
-        case "labelOrientation":
-          if (Array.isArray(astChild[1])) throw new Error("LISPsmos Error: Expression label orientation cannot be a list!");
-          if (possibleLabelOrientations.indexOf(astChild[1]) == -1) {
-            throw new Error(`LISPsmos Error: labelOrientation ${astChild[1]} does not exist!`);
-          }
-        case "lineStyle":
-        case "pointStyle":
-        case "color":
-          if (typeof astChild[1] != "string") {
-            throw new Error(`LISPsmos Error: Expression display property ${astChild[0]} must be a string!`);
-          }
-          defaultExpression[astChild[0]] = astChild[1];
-          break;
-        case "parametricDomain":
-          if (!Array.isArray(astChild)) {
-            throw new Error(`LISPsmos Error: Parametric domain must be a list, as it can contain multiple values.`)
-          }
-          defaultExpression.parametricDomain = this.getParametricJSON(astChild);
-          break;
-        case "clickableInfo":
-          defaultExpression.clickableInfo = {
-            enabled: true,
-            latex: this.expressionCompiler.astNodeToDesmosExpressions(astChild[1])
-          };
-          break;
-        case "fill":
-        case "lines":
-        case "hidden":
-        case "showLabel":
-        case "suppressTextOutline":
-          defaultExpression[astChild[0]] = (astChild[1] == "true");
-          break;
-        default:
-          throw new Error(`LISPsmos Error: Unknown displayed expression property '${astChild[0]}'`);
-      }
-    }
-    return defaultExpression;
-  }
-
-  getParametricJSON(astList: Array<ASTNode>) {
-    let parametricJSON: ParametricDomain = { min: "0", max: "1" };
-    for (let parametricSetting of astList.slice(1)) {
-      switch (parametricSetting[0]) {
-        case "min":
-        case "max":
-          parametricJSON[parametricSetting[0]] = this.expressionCompiler.astNodeToDesmosExpressions(parametricSetting[1]);
-          break;
-        default:
-          throw new Error("Unidentified parametric setting: " + parametricSetting[0]);
-      }
-    }
-    return parametricJSON;
-  }
+const defaultOptions: CompilerOptions = {
+  allowInlineJS: false,
+  import: (query: string) => {
+    throw new Error(`Cannot import '${query}': No import function specified in compiler options!`);
+  },
+  commentsAsNotes: false
 };
 
-// export function astToDesmosExpressions(ast: ASTNode) {
-//   let exprId = 0;
-//   let desmosState: DesmosState = {
-//   "version": 9,
-//   "randomSeed": "f8731634d5d57a05dabd714121ac9b91",
-//   "graph": {
-//     "viewport": {
-//       "xmin": -10,
-//       "ymin": -10,
-//       "xmax": 10,
-//       "ymax": 10
-//     }
-//   },
-//   "expressions": {
-//     "list": [
-//     ]
-//   }
-//   };
+export async function compile(str: string, options?: CompilerOptions) {
+  if (!options) {
+    options = defaultOptions
+  }
+  Object.entries(defaultOptions).forEach(([optName, optValue]) => {
+    if (!options.hasOwnProperty(optName)) {
+      //@ts-ignore
+      options[optName] = optValue; //type-safe b/c both of these are CompilerOptions
+    } 
+  });
+  let macroState = new Map<string, any>();
   
-//   let currentFolder: number = undefined;
-//   macros = macrosDefined;
-//   if (!macrosDefined) macros = {};
-//   let globalAST: ASTNode = [];
-//   let globalHelperState: LispsmosGlobalState = {};
-//   globalHelperState.macros = macros;
-//   globalHelperState.globalExpressions = globalAST;
+  let expressionIndex = 1;
 
-//   globalHelperState.reapplyMacros = true;
-//   while (globalHelperState.reapplyMacros) {
-//     globalHelperState.reapplyMacros = false;
-//     ast = applyMacros(ast, macros, globalHelperState);
-//   }
+  let compiler: Compiler = {
+    getMacroState(macroName: string) {
+      if (this.macroState.has(macroName)) {
+        return macroState.get(macroName);
+      }
+      throw new Error(`Macro state for macro '${macroName}' not found.`);
+    },
+    variables: new Map<string, ASTNode>(),
+    functions: new Map<string, ASTNode>(),
+    macros: new Map<string, MacroFunction>(),
+    calcState: {
+      version: 9,
+      graph: {
+        viewport: {
+          xmin: -10, xmax: 10, ymin: -10, ymax: 10
+        }
+      },
+      expressions: {
+        list: []
+      }
+    },
+    import: options.import,
+    options,
+    getNewExpressionIndex() {
+      return (expressionIndex++).toString();
+    }
+  };
+  compiler.macros.set("inlineJS", async (ast: ASTInternalNode, c: Compiler): Promise<Maybe<ASTNode[]>> => {
+    try {
+      let functionNameNode = ast.content[1];
+      if (!(functionNameNode.nodeType == "leaf" && functionNameNode.tokenType == "identifier")) {
+        throw new Error("Inline JS macro name must be an identifier!");
+      }
+      let functionName = functionNameNode.content;
+      let functionBodyNode = ast.content[2];
+      if (functionBodyNode.nodeType == "leaf" && functionBodyNode.tokenType == "string_literal") {
+        let macroFn = new Function("ast", "compiler", functionBodyNode.content);
+        c.macros.set(functionName, async (ast2: ASTInternalNode, c2: Compiler): Promise<Maybe<ASTNode[]>> => {
+          let ret;
+          try {
+            ret = macroFn(ast2, c2);
+          } catch (err) {
+            return getFailureMaybe(ast, "macro", `Failed to run inlineJS macro '${ast2.content[0].content as string}' due to the following: ${err.message}.`);
+          }
+          return ret;
+        });
+      } else {
+        throw new Error(`Inline JS macro '${functionName}' body must be a string!`);
+      }
+    } catch (err) {
+      return getFailureMaybe(ast, "macro", `Failed to create inlineJS macro: ${err.message}.`);
+    }
+    return success([]);
+  });
 
-//   let expressionCompiler = new ExpressionCompiler(globalHelperState);
+  //lex
+  let maybeLexedCode = lex(str);
+  let lexedCode = unpack(maybeLexedCode);
 
-//   globalHelperState.expressionCompiler = expressionCompiler;
-//   {
-//     let compiledExprs = astNodeToDesmosState(ast);
-//     let compiledGlobalState = astNodeToDesmosState(globalAST);
-//     return JSON.stringify(desmosState);
+  //parse
+  let maybeParsedCode = parse(lexedCode);
+  let parsedCode = unpack(maybeParsedCode);
 
-//   }
-// }
+  //preprocess
+  let preprocessedAST = unpack(await preprocess(parsedCode, compiler));
+  
 
-// export function transpileLisp(str, macros) {
-//   return astToDesmosExpressions(tokenStreamToAST(stringToTokenStream(str)), macros);
-// }
 
-export function parse(str: string): ASTNode {
-  return tokenStreamToAST(stringToTokenStream(str));
-}
+  return compiler.calcState;
+  //return JSON.stringify(preprocessedAST);
+};

@@ -57,3 +57,17 @@ export let builtins = [
   "arctan",
   "abs"
 ]
+
+export let operators = [
+  "+",
+  "-",
+  "*",
+  "/",
+  "->",
+  "=",
+  "==",
+  ">",
+  "<",
+  ">=",
+  "<="
+]
