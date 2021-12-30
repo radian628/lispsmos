@@ -106,9 +106,9 @@
     let ast = [];
 
     let terrainSlotFiles = [
-      ['menu_scene', 'canyon_1', 'canyon_4', 'canyon_7', 'canyon_10', 'canyon_13', 'canyon_16'],
-      ['canyon_2', 'canyon_5', 'canyon_8', 'canyon_11', 'canyon_14', 'canyon_17'],
-      ['canyon_3', 'canyon_6', 'canyon_9', 'canyon_12', 'canyon_15', 'canyon_18']
+      ['menu_scene', 'canyon_1', 'canyon_4', 'canyon_7', 'canyon_10', 'canyon_13', 'canyon_16', 'canyon_19', 'canyon_22', 'canyon_25'],
+      ['canyon_2', 'canyon_5', 'canyon_8', 'canyon_11', 'canyon_14', 'canyon_17', 'canyon_20', 'canyon_23', 'canyon_26'],
+      ['canyon_3', 'canyon_6', 'canyon_9', 'canyon_12', 'canyon_15', 'canyon_18', 'canyon_21', 'canyon_24', 'canyon_27']
     ];
 
     ast.push(...terrainSlotFiles.flat(2).map(tsf => {
@@ -591,11 +591,11 @@
   (staticVec3 StartPlayerVelocity 0 0 0)
   (= xStartPlayerRotation -1.5)
   (= yStartPlayerRotation -0.1)
-  (= unlockedCheckpoints (list 1 1 1 1))
-  (= bronzeThresholds (list 66 70 70 80))
-  (= silverThresholds (list 58 65 63 75))
-  (= goldThresholds (list 52 60 56 70))
-  (= personalBests (list 999 999 999 999))
+  (= unlockedCheckpoints (list 1 1 1 1 1 1))
+  (= bronzeThresholds (list 66 70 70 60 90 70))
+  (= silverThresholds (list 58 65 63 55 85 65))
+  (= goldThresholds (list 52 60 56 50 80 60))
+  (= personalBests (list 999 999 999 999 999 999))
   (= currentCheckpoint 1)
   (fn startGame (,
     (-> (x3 PlayerPosition) (x3 StartPlayerPosition))
@@ -632,7 +632,9 @@
         'checkpoint_1',
         'checkpoint_2',
         'checkpoint_3',
-        'checkpoint_4'
+        'checkpoint_4',
+        'checkpoint_5',
+        'checkpoint_6'
       ];
       compiler.macroState.desmosPlane.counter = 0;
       compiler.macroState.desmosPlane.checkpointFileStems = checkpointFileStems;
@@ -919,6 +921,15 @@
 )
 
 (folder ((title "Controls"))
+  ;(displayMe
+    (image 
+      "http://localhost:8080/desmos-plane-2/assets/blank-image.jpg"
+      (
+        (center pcControlJoystick)
+        (draggable true)
+      )
+    )
+  ;)
   (defineFindAndReplace ifInGame doIfInGame doIfNotInGame
     ((piecewise ((== gameState GAMESTATE_GAME) doIfInGame) (doIfNotInGame)))
   )
