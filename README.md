@@ -1,4 +1,6 @@
 # LISPsmos
+**Disclaimer: Despite what GitHub says, LISPsmos was not written in Common Lisp. The ".lisp" files are LISPsmos files.**
+
 LISPsmos is a LISP-like programming language that maps almost directly to Desmos expressions, offering an alternate, text-based workflow and tooling. 
 
 Along with most Desmos features, LISPsmos comes with builtin support for the following:
