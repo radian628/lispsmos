@@ -1,0 +1,58 @@
+(displayMe
+  (= points (point
+    (random 100 1)
+    (random 100 2)
+  ))
+)
+
+(defineFindAndReplace getQuadtreeIter current next name
+  (
+    (multilayerFn name midX midY extentX extentY L
+      (
+        (square1 ((concatTokens quadtreeIter next) 
+          (- midX (/ extentX 2))
+          (- midY (/ extentY 2))
+          (/ extentX 2)
+          (/ extentY 2)
+          ([] L (== (+ (sign (- midX (.x L))) (sign (- midY (.y L)))) -2))
+        ))
+        (square2 ((concatTokens quadtreeIter next) 
+          (+ midX (/ extentX 2))
+          (- midY (/ extentY 2))
+          (/ extentX 2)
+          (/ extentY 2)
+          ([] L (== (- (sign (- midX (.x L))) (sign (- midY (.y L)))) 2))
+        ))
+        (square3 ((concatTokens quadtreeIter next) 
+          (- midX (/ extentX 2))
+          (+ midY (/ extentY 2))
+          (/ extentX 2)
+          (/ extentY 2)
+          ([] L (== (- (sign (- midX (.x L))) (sign (- midY (.y L)))) -2))
+        ))
+        (square4 ((concatTokens quadtreeIter next) 
+          (+ midX (/ extentX 2))
+          (+ midY (/ extentY 2))
+          (/ extentX 2)
+          (/ extentY 2)
+          ([] L (== (+ (sign (- midX (.x L))) (sign (- midY (.y L)))) 2))
+        ))
+        (return (join
+          (point (length square1) -999999999)
+          (point (length square2) -999999999)
+          (point (length square3) -999999999)
+          (point (length square4) -999999999)
+          square1 square2 square3 square4
+        ))
+      )
+    )
+  )
+)
+
+(getQuadtreeIter 0 1 quadtreeIter0)
+(getQuadtreeIter 1 2 quadtreeIter1)
+(getQuadtreeIter 2 3 quadtreeIter2)
+(getQuadtreeIter 3 4 quadtreeIter3)
+(getQuadtreeIter 4 5 quadtreeIter4)
+(fn quadtreeIter5 x1 y1 x2 y2 L L)
+(quadtreeIter0 0.5 0.5 0.5 0.5 points)

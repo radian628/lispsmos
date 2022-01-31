@@ -87,7 +87,7 @@ async function getPLYFile(ast: ASTNode, compiler: LispsmosCompiler) {
 function tryLoadPLY(ast: ASTNode, compiler: LispsmosCompiler) {
   let importString = ast[1];
   if (Array.isArray(importString)) {
-    throw new Error(`LISPsmos Error: Cannot import a list!`);
+    throw new Error(`LISPsmos Error: Cannot import a  list!`);
   }
   importString = extractStringFromLiteral(importString);
   let importAttempt = compiler.macroState.graphics.assets[importString];

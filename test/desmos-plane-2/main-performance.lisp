@@ -102,13 +102,25 @@
   (withAssetPath importBakedLightSource "light_1.ply")
   (withAssetPath importBakedLightSource "light_2.ply")
   (withAssetPath importBakedLightSource "light_3.ply")
+  (withAssetPath importBakedLightSource "light_4.ply")
+  (withAssetPath importBakedLightSource "light_5.ply")
+  (withAssetPath importBakedLightSource "light_6.ply")
+  (withAssetPath importBakedLightSource "light_7.ply")
+  (withAssetPath importBakedLightSource "light_8.ply")
+  (withAssetPath importBakedLightSource "light_9.ply")
+  (withAssetPath importBakedLightSource "light_10.ply")
+  (withAssetPath importBakedLightSource "light_11.ply")
+  (withAssetPath importBakedLightSource "light_12.ply")
+  (withAssetPath importBakedLightSource "light_13.ply")
+  (withAssetPath importBakedLightSource "light_14.ply")
+  (withAssetPath importBakedLightSource "light_15.ply")
   (inlineJS "
     let ast = [];
 
     let terrainSlotFiles = [
-      ['menu_scene', 'canyon_1', 'canyon_4', 'canyon_7', 'canyon_10', 'canyon_13', 'canyon_16', 'canyon_19', 'canyon_22', 'canyon_25'],
-      ['canyon_2', 'canyon_5', 'canyon_8', 'canyon_11', 'canyon_14', 'canyon_17', 'canyon_20', 'canyon_23', 'canyon_26'],
-      ['canyon_3', 'canyon_6', 'canyon_9', 'canyon_12', 'canyon_15', 'canyon_18', 'canyon_21', 'canyon_24', 'canyon_27']
+      ['menu_scene', 'canyon_1', 'canyon_4', 'canyon_7', 'canyon_10', 'canyon_13', 'canyon_16', 'canyon_19', 'canyon_22', 'canyon_25', 'canyon_28', 'canyon_31', 'canyon_34', 'canyon_37', 'canyon_40', 'canyon_43', 'canyon_46'],
+      ['canyon_2', 'canyon_5', 'canyon_8', 'canyon_11', 'canyon_14', 'canyon_17', 'canyon_20', 'canyon_23', 'canyon_26', 'canyon_29', 'canyon_32', 'canyon_35', 'canyon_38', 'canyon_41', 'canyon_44', 'canyon_47'],
+      ['canyon_3', 'canyon_6', 'canyon_9', 'canyon_12', 'canyon_15', 'canyon_18', 'canyon_21', 'canyon_24', 'canyon_27', 'canyon_30', 'canyon_33', 'canyon_36', 'canyon_39', 'canyon_42', 'canyon_45']
     ];
 
     ast.push(...terrainSlotFiles.flat(2).map(tsf => {
@@ -587,15 +599,15 @@
 
 ; bottleneck?
 (folder ((title "Checkpoints"))
+  (= unlockedCheckpoints (list 1 0 0 0 0 0 0 0))
   (staticVec3 StartPlayerPosition 0 0 -1)
   (staticVec3 StartPlayerVelocity 0 0 0)
   (= xStartPlayerRotation -1.5)
   (= yStartPlayerRotation -0.1)
-  (= unlockedCheckpoints (list 1 1 1 1 1 1))
-  (= bronzeThresholds (list 66 70 70 60 90 70))
-  (= silverThresholds (list 58 65 63 55 85 65))
-  (= goldThresholds (list 52 60 56 50 80 60))
-  (= personalBests (list 999 999 999 999 999 999))
+  (= bronzeThresholds (list 58 66 64 65 63 56 78 62))
+  (= silverThresholds (list 55 63 60 62 59 52 74 59))
+  (= goldThresholds (list 52 60 56 59 55 48 70 56))
+  (= personalBests (list 999 999 999 999 999 999 999 999))
   (= currentCheckpoint 1)
   (fn startGame (,
     (-> (x3 PlayerPosition) (x3 StartPlayerPosition))
@@ -634,7 +646,9 @@
         'checkpoint_3',
         'checkpoint_4',
         'checkpoint_5',
-        'checkpoint_6'
+        'checkpoint_6',
+        'checkpoint_7',
+        'checkpoint_8',
       ];
       compiler.macroState.desmosPlane.counter = 0;
       compiler.macroState.desmosPlane.checkpointFileStems = checkpointFileStems;
@@ -831,7 +845,7 @@
       (* forceAgainstWingMag (yContribToXReverse))
       (* forceAgainstRudderMag (xContribToXReverse))
       (* (piecewise ((> insideCheckpointViewbox 0)
-        (* 1.3 (- checkpointSpeed playerSpeed))
+        (* 1.3 (max 0 (- checkpointSpeed playerSpeed)))
       ) (0)
       ) (zContribToXReverse))
     )
@@ -841,9 +855,14 @@
       (* forceAgainstWingMag (yContribToYReverse))
       (* forceAgainstRudderMag (xContribToYReverse))
       -0.75
-      (piecewise ((> insideCheckpointViewbox 0)
-        (* 0.7 (- (y3 StartPlayerPosition) (y3 PlayerPosition)))
-      ) (0))
+      ;; (piecewise ((> insideCheckpointViewbox 0)
+      ;;   (* 0.7 (max (- (y3 StartPlayerPosition) (y3 PlayerPosition)) 0))
+      ;; ) (0))
+      
+      ;; (* (piecewise ((> shouldDoHeightAdjustment 0)
+      ;;   (* 1.3 (max 0 (- checkpointSpeed playerSpeed)))
+      ;; ) (0)
+      ;; ) (zContribToYReverse))
     )
   )
   (= zForceOnPlayer
@@ -851,7 +870,7 @@
       (* forceAgainstWingMag (yContribToZReverse))
       (* forceAgainstRudderMag (xContribToZReverse))
       (* (piecewise ((> insideCheckpointViewbox 0)
-        (* 1.3 (- checkpointSpeed playerSpeed))
+        (* 1.3 (max 0 (- checkpointSpeed playerSpeed)))
       ) (0)
       ) (zContribToZReverse))
     )
@@ -933,8 +952,8 @@
   (defineFindAndReplace ifInGame doIfInGame doIfNotInGame
     ((piecewise ((== gameState GAMESTATE_GAME) doIfInGame) (doIfNotInGame)))
   )
-  (= joystickSensitivity (piecewise ((== phoneModeEnabled 1) 2.25) (1.5)))
-  (= joystickSensitivityPower (piecewise ((== phoneModeEnabled 1) 1.4) (1.0)))
+  (= joystickSensitivity (piecewise ((== phoneModeEnabled 1) 2.25) (2.2)))
+  (= joystickSensitivityPower (piecewise ((== phoneModeEnabled 1) 1.4) (1.2)))
   (= pcJoystickCenterOffset (piecewise ((== phoneModeEnabled 1) (point 0.15 -2.0)) ((point 0 0))))
   (displayMe
     pcJoystickCenterOffset
@@ -1313,6 +1332,29 @@
   ) 1.5)
 )
 
+(folder ((title "Win Animation"))
+  (= winAnimationProgress 0)
+  (displayMe
+    (polygon (point -10 -10) (point -10 10) (point 10 10) (point 10 -10))
+    (colorLatex (rgb 255 255 255))
+    (fillOpacity (min 1 (* winAnimationProgress 1)))
+  )
+  (UITextBlack "Congratulations!" (== gameState GAMESTATE_WIN) (point 0 0.7) (min 1 (* winAnimationProgress 0.3)) 3)
+  (UITextBlack "Thank you for playing Desmos Plane!" (== gameState GAMESTATE_WIN) (point 0 0.3) (max 0 (* (- winAnimationProgress 5) 0.3)) 1.5)
+  (UITextBlack "-Adrian/Radian628/The Developer" (== gameState GAMESTATE_WIN) (point 0 0.1) (max 0 (* (- winAnimationProgress 10) 0.3)) 1.5)
+
+  (UIButton "Main Menu" (> (piecewise
+    ((== gameState GAMESTATE_WIN)
+      (piecewise ((> winAnimationProgress 13) 1) (0))
+    )
+    (0)
+  ) 0) (point -0.6 -0.25) (point 0.6 -0.55) 1 (,
+    (-> gameState GAMESTATE_MAIN_MENU)
+    (-> pcControlJoystick (point 5 5))
+    (-> winAnimationProgress 0)
+  ))
+)
+
 (folder ((title "Main Game Loop"))
   (= GAMESTATE_MAIN_MENU 0)
   (= GAMESTATE_GAME 1)
@@ -1321,6 +1363,7 @@
   (= GAMESTATE_SETTINGS_MENU 4)
   (= GAMESTATE_START_GAME_1 5)
   (= GAMESTATE_START_GAME_2 6)
+  (= GAMESTATE_WIN 7)
 
   (= gameState GAMESTATE_MAIN_MENU)
 
@@ -1330,9 +1373,21 @@
 
   (= physicsTimestep 0)
 
+  (= shouldDoHeightAdjustment 0)
+
   (fn gameLoop deltaTime
     (,
       (piecewise
+        ((= gameState GAMESTATE_WIN)
+          (,
+            (-> winAnimationProgress (+ winAnimationProgress deltaTime))
+            (-> personalBests (replaceSingleListElem 
+              personalBests 
+              8
+              (min levelTimeElapsed ([] personalBests 8))
+            ))
+          )
+        )
         ((= gameState GAMESTATE_START_GAME_1) 
           (,
             (setActiveCheckpoint)
@@ -1357,16 +1412,27 @@
             (-> xPlayerRotation (- xPlayerRotation (* deltaTime (.x joystickDeltaRotation))))
             (-> yPlayerRotation (+ yPlayerRotation (* deltaTime (.y joystickDeltaRotation))))
             (-> averageDeltaTime (+ (* averageDeltaTime 0) (* (* deltaTime 1000) 1)))
-            (-> (x3 PlayerVelocity) (+ (* (^ 0.9997 deltaTime) (x3 PlayerVelocity)) (* deltaTime (x3 ForceOnPlayer))))
-            (-> (y3 PlayerVelocity) (+ (* (^ 0.9997 deltaTime) (y3 PlayerVelocity)) (* deltaTime (y3 ForceOnPlayer))))
-            (-> (z3 PlayerVelocity) (+ (* (^ 0.9997 deltaTime) (z3 PlayerVelocity)) (* deltaTime (z3 ForceOnPlayer))))
+            (-> (x3 PlayerVelocity) (+ (* (^ 0.99985 deltaTime) (x3 PlayerVelocity)) (* deltaTime (x3 ForceOnPlayer))))
+            (-> (y3 PlayerVelocity) (+ (* (^ 0.99985 deltaTime) (y3 PlayerVelocity)) (* deltaTime (y3 ForceOnPlayer))))
+            (-> (z3 PlayerVelocity) (+ (* (^ 0.99985 deltaTime) (z3 PlayerVelocity)) (* deltaTime (z3 ForceOnPlayer))))
             (-> (x3 PlayerPosition) (+ (x3 PlayerPosition) (* deltaTime (x3 PlayerVelocity))))
-            (-> (y3 PlayerPosition) (+ (y3 PlayerPosition) (* deltaTime (y3 PlayerVelocity))))
+            (-> (y3 PlayerPosition) (+ (y3 PlayerPosition) (piecewise
+              ((== shouldDoHeightAdjustment 0) (* deltaTime (y3 PlayerVelocity)))
+              ((* 0.1 (sign (- (y3 StartPlayerPosition) (y3 PlayerPosition)))))
+            )))
             (-> (z3 PlayerPosition) (+ (z3 PlayerPosition) (* deltaTime (z3 PlayerVelocity))))
             (piecewise (
               (< nearestTriangleCollision ppcOffsetMag)
               (-> gameState GAMESTATE_CRASH)
-            ))
+            )
+              
+              ((piecewise
+                (
+                  (> (isInsideViewbox (list (x3 PlayerPosition) (y3 PlayerPosition) (z3 PlayerPosition)) (withAssetPath importPLYBounds "win_collider.ply")) 0)
+                  (-> gameState GAMESTATE_WIN)
+                )
+              ))
+            )
             (piecewise
               ((== (mod frameCount 6) 0)
                 (,          
@@ -1395,6 +1461,7 @@
                   ((> insideCheckpointViewbox 0)
                     (,
                       (-> currentCheckpoint insideCheckpointViewbox)
+                      ;(-> shouldDoHeightAdjustment 1)
                       (piecewise ((== currentlySetCheckpoint currentCheckpoint) (-> shouldSetActiveCheckpoint 0))
                         ((,
                           (-> shouldSetActiveCheckpoint 1)
@@ -1409,11 +1476,15 @@
                   ((== shouldSetActiveCheckpoint 1)
                     (,
                       (setActiveCheckpoint)
+                      (-> shouldDoHeightAdjustment 1)
                       (-> shouldSetActiveCheckpoint 0)
                     )
                   )
                 )
               )
+              ((piecewise
+                ((> (y3 PlayerPosition) (y3 StartPlayerPosition)) (-> shouldDoHeightAdjustment 0))
+              ))
             )
             (piecewise
               ((== shouldSetActiveCheckpoint 0)

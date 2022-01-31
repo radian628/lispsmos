@@ -7,7 +7,7 @@
     let currentFnName = fnToRecurse + 'composed' + i;
     let lastFnName = fnToRecurse + ((i == 0) ? '' : ('composed' + (i - 1)));
     exprList.push([
-      'fn', currentFnName, 'x', [lastFnName, [lastFnName, 'x']]
+      'fn', currentFnName, 'x', [lastFnName, [lastFnName, [lastFnName, 'x']]]
     ]);
 
     let currentRecursionFnName = fnToRecurse + 'recursed' + i;
@@ -33,9 +33,9 @@
 
 ")
 
-(fn f x (* 1.01 x))
+(fn f x (+ x 1))
 (folder ((title "me when YES desmos recursion ;)"))
-  (meWhenNoDesmosRecursion f 10)
+  (meWhenNoDesmosRecursion f 8)
 )
 (displayMe
   (fComposedNTimes 1 (floor x))
