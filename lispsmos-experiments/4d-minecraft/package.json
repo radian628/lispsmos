@@ -1,0 +1,14 @@
+{
+  "name": "4d-minecraft",
+  "version": "0.1.0",
+  "description": "4d minecraft in desmos",
+  "main": "file-server.mts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npx tsc --watch",
+    "start": "node dist/file-server.mjs"
+  },
+  "author": "radian628",
+  "license": "MIT",
+  "type": "module"
+}

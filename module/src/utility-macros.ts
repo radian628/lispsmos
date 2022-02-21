@@ -9,12 +9,10 @@ type ASTMapping = {
 
 function findAndReplace(stringsToReplace: string[], thingsToReplaceThemWith: ASTNode[], astToReplace: ASTNode) {
   let replaceSrc: ASTMapping = {};
-  //console.log(thingsToReplaceThemWith);
   for (let i = 0; i < stringsToReplace.length; i++) {
     replaceSrc[stringsToReplace[i]] = thingsToReplaceThemWith[i];
   }
   let result = _findAndReplace(replaceSrc, astToReplace);
-  console.log(result);
   return result;
 }
 
@@ -39,6 +37,23 @@ function _findAndReplace(replaceSrc: ASTMapping, astToReplace: ASTNode): ASTNode
 export function register (c: LispsmosCompiler) {
   c.registerEvent("init", (compiler) => {
     compiler.macroState.utility = { assets: {}, preprocessorFlags: new Set<string>(), keyValueStore: new Map<string, ASTNode>() };
+  })
+
+  c.registerResourceGatherer("registerCompilerExtension", async (ast, compiler) => {
+    let importString = ast[1];
+    if (Array.isArray(importString)) {
+      throw new Error(`LISPsmos Error: Cannot import a list!`);
+    }
+    importString = extractStringFromLiteral(importString);
+    let compilerExtension = await import(/* webpackIgnore: true */importString);
+    compilerExtension.register(c);
+    //let compilerExtensionString = await compiler.import(importString);
+    //let compilerExtension = new Function("exports", compilerExtensionString.payload + "\n\nreturn register;");
+    //compilerExtension({})(c);
+    return;
+  })
+  c.registerMacro("registerCompilerExtension", (ast, compiler) => {
+    return [];
   })
 
   c.registerMacro("setKeyValueStore", (ast, compiler) => {
@@ -94,7 +109,6 @@ export function register (c: LispsmosCompiler) {
     for (let astChild of ast.slice(1)) {
       outToken += astChild;
     }
-    //console.log(astList, outToken);
     return [outToken];
   });
 
@@ -117,7 +131,6 @@ export function register (c: LispsmosCompiler) {
       throw new Error("LISPsmos Error: Preprocessor flag cannot be a list!");
     }
     compiler.macroState.utility.preprocessorFlags.add(ast[1]);
-    console.log(compiler.macroState.utility.preprocessorFlags);
     return [];
   });
 
@@ -128,7 +141,6 @@ export function register (c: LispsmosCompiler) {
     if (Array.isArray(ast[1])) {
       throw new Error("LISPsmos Error: preprocessIf may only be used on a string!");
     }
-    console.log("stupid");
     if (compiler.macroState.utility.preprocessorFlags.has(ast[1])) {
       return ast[2];
     }
@@ -190,7 +202,6 @@ export function register (c: LispsmosCompiler) {
     if (typeof importAttempt != "string") {
       throw new Error(`LISPsmos Error: Cannot include '${importString}'- the file received was not a string. Received type '${typeof importAttempt}'`)
     }
-    console.log(importAttempt);
     
     let importedAST;
 
@@ -267,6 +278,39 @@ let createMultilayerFunction = (ast: ASTNode, compiler: LispsmosCompiler): ASTNo
       bodyDefined: true
     })
   }
+
+  function getInlined(dst: ASTNode, oldAST: string, newAST: ASTNode): ASTNode {
+    if (Array.isArray(dst)) {
+      return dst.map(child => getInlined(child, oldAST, newAST));
+    } else {
+      return (dst == oldAST) ? newAST : dst;
+    }
+  }
+
+  let inlines = new Map<string, ASTNode>();
+  let fnBodyWithInlines = [];
+  for (let expr of fnBody) {
+    let isIntermediateInline = expr[0];
+    if (isIntermediateInline == "inline") {
+      if (Array.isArray(expr[1])) {
+        throw new Error(`LISPsmos Error: Intermediate value name must not be a list!`);
+      }
+      let inlinedIntermediateBody = expr[2];
+      for (let [inlineName, inlineValue] of inlines.entries()) {
+        inlinedIntermediateBody = getInlined(inlinedIntermediateBody, inlineName, inlineValue);
+      }
+      inlines.set(expr[1], inlinedIntermediateBody);
+      //fnBodyWithInlines.push(expr[0], expr[1], inlinedIntermediateBody);
+    } else {
+      let inlinedIntermediateBody = expr[1];
+      for (let [inlineName, inlineValue] of inlines.entries()) {
+        inlinedIntermediateBody = getInlined(inlinedIntermediateBody, inlineName, inlineValue);
+      }
+      fnBodyWithInlines.push([expr[0], inlinedIntermediateBody]);
+    }
+  }
+
+  fnBody = fnBodyWithInlines;
 
   let intermediateOrdering: string[] = [];
   fnBody.forEach((expr, i) => {
@@ -361,11 +405,5 @@ let createMultilayerFunction = (ast: ASTNode, compiler: LispsmosCompiler): ASTNo
     }
   });
 
-  
-  console.log(intermediates)
-  console.log(intermediateOrdering)
-  console.log(intermediateFunctionLocationIndices)
-  console.log(intermediateFunctionState)
-  console.log(intermediateFunctions);
   return intermediateFunctions;
 }

@@ -129,7 +129,6 @@ export class LispsmosCompiler {
       fn(this);
     });
     await this.compileAST(tokenStreamToAST(stringToTokenStream(src)));
-    console.log(this.desmosState);
     return this.desmosState;
   }
 
@@ -219,8 +218,6 @@ export class LispsmosCompiler {
       await Promise.all(this.pendingResourceGatherers);
       this.ast = this.applyMacros(this.ast);
     }
-    console.log("FINISHED PREPROCESSING STEP");
-    console.log(this.ast);
     //gather resources
 
     //create expression compiler

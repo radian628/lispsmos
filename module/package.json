@@ -1,17 +1,19 @@
 {
   "name": "lispsmos",
-  "version": "0.1.0",
-  "description": "Desmos domain specific language for fast, performant equations.",
+  "version": "0.2.2",
+  "description": "A LISP-like programming language which compiles to Desmos expressions.",
   "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "npx tsc --watch"
+    "build": "npx tsc --watch",
+    "prepublish": "npx tsc"
   },
   "author": "radian628",
-  "license": "ISC",
+  "license": "MIT",
   "type": "module",
   "devDependencies": {
     "@types/node": "^16.11.10",
     "typescript": "^4.5.2"
-  }
+  },
+  "types": "dist/index.d.ts"
 }

@@ -161,7 +161,6 @@ function whileLoopToAST(astList: Array<ASTNode>, msp: any) {
     ], []));
   } else {
     //if last instruction is not, combine.
-    //console.log(globalState.procedure.counter);
     
     msp.counter++; 
     stepsContainer = stepsContainer.concat(doProceduralWrapping(msp, (firstInstruction != lastInstruction) ? [
@@ -335,102 +334,6 @@ function getDefaultConfig(): ProceduralConfig {
   };
 }
 
-// export let macros = {
-//   procedureConfig: (ast, compiler): Array<ASTNode> => {
-//     if (compiler.macroState.procedure) {
-//       throw new Error(
-//         "Procedure Macro Error: procedureConfig must be placed before any procedures!"
-//       );
-//     } else {
-//       compiler.macroState.procedure = {};
-//     }
-//     let msp = compiler.macroState.procedure;
-//     let config = getDefaultConfig();
-//     msp.config = config;
-//     for (let setting of ast.slice(1)) {
-//       if (!Array.isArray(setting)) {
-//         throw new Error(`Procedure Macro Error: Setting must be a list!`);
-//       }
-//       if (Array.isArray(setting[0])) {
-//         throw new Error(`Procedure config setting name cannot be a list!`);
-//       }
-//       switch (setting[0]) {
-//         case "entryPoint":
-//         case "desmosEntryPoint":
-//         case "programCounter":
-//         case "pointerStack":
-//           config[setting[0]] = setting[1];
-//           break;
-//         default:
-//           throw new Error(
-//             `Procedure Macro Error in procedureConfig: Unidentified configuration setting: ${setting[0]}`
-//           );
-//       }
-//     }
-//     return [];
-//   },
-//   procedure: (astList, astGlobal, globalState) => {
-//     //init global state for entry point (main) if haven't already
-//     if (!globalState.procedure) globalState.procedure = {};
-//     if (!globalState.procedure.config)
-//       globalState.procedure.config = getDefaultConfig();
-//     if (!globalState.procedure.root) {
-//       let root = [];
-//       globalState.procedure.root = root;
-//       astGlobal.push(root);
-//       let procPiecewise = ["piecewise"];
-//       globalState.procedure.piecewise = procPiecewise;
-//       globalState.procedure.counter = 0;
-//       globalState.procedure.procedures = {};
-//       root.push(
-//         "fn",
-//         globalState.procedure.config.desmosEntryPoint,
-//         procPiecewise
-//       );
-//     }
-//     if (!globalState.procedure.returnPointerStack) {
-//       let returnPointerStack = parse(
-//         `(= ${globalState.procedure.config.pointerStack} (list -1))`
-//       );
-//       astGlobal.push(returnPointerStack);
-//       globalState.procedure.returnPointerStack = returnPointerStack;
-//     }
-//     if (astList[1] == globalState.procedure.config.entryPoint) {
-//       astGlobal.push([
-//         "=",
-//         globalState.procedure.config.programCounter,
-//         globalState.procedure.counter.toString(),
-//       ]);
-//     }
-//     globalState.procedure.procedures[astList[1]] = {
-//       pointer: globalState.procedure.counter,
-//     };
-//     let config = globalState.procedure.config;
-
-//     //actually do the thing
-//     let piecewise = globalState.procedure.piecewise;
-//     for (let astChild of astList.slice(2)) {
-//       if (isWrappingHandledByChildren(astChild)) {
-//         let proceduralExpr = getProceduralExpressionAST(astChild, globalState);
-//         piecewise.push(...proceduralExpr);
-//       } else {
-//         piecewise.push(...doProceduralWrapping(globalState, astChild));
-//       }
-//       globalState.procedure.counter++;
-//     }
-    
-//     //callstack pop
-//     let callstackPopper = doProceduralWrapping(globalState, 
-//       parse(`, (-> ${config.programCounter} ([] ${config.pointerStack} (length ${config.pointerStack}))) 
-//     (-> ${config.pointerStack} ([] ${config.pointerStack} 1 ... (- (length ${config.pointerStack}) 1)))`), []
-//     )
-//     piecewise.push(...callstackPopper);
-//     //console.log(piecewise);
-//     globalState.procedure.counter++;
-//     return [];
-//   },
-// };
-
 export function register(c: LispsmosCompiler) {
   c.registerMacro("procedureConfig", (ast, compiler): Array<ASTNode> => {
     if (compiler.macroState.procedure) {
@@ -543,7 +446,6 @@ export function register(c: LispsmosCompiler) {
     (-> ${config.pointerStack} ([] ${config.pointerStack} 1 ... (- (length ${config.pointerStack}) 1)))`), []
     )
     piecewise.push(...callstackPopper);
-    //console.log(piecewise);
     msp.counter++;
     return returnValue;
   });

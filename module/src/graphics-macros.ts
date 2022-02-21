@@ -162,7 +162,6 @@ export function register (c: LispsmosCompiler) {
     }
     let outAST: ASTNode[] = [];
 
-    console.log("PARSED PLY FILE:", parsedPLY);
     parsedPLY.get("face").data.vertex_indices = parsedPLY.get("face").data.vertex_indices.map(t => (t as number[]).map(v => (1 + v))); 
     parsedPLY.forEach((elem, elemName) => {
       Object.entries(elem.data).forEach((properties => {
@@ -171,7 +170,6 @@ export function register (c: LispsmosCompiler) {
         outAST.push(["=", plyPropEscape(`${importedPLYName}ELEM${elemName}PROP${propName}`), ["list"].concat(propValue.flat().map(e => e.toString()))]);
       }));
     });
-    console.log(outAST);
     return [outAST];
   });
   c.registerMacro("importPLYBounds", (ast: ASTNode, compiler: LispsmosCompiler): ASTNode[] => {
@@ -235,7 +233,6 @@ export function register (c: LispsmosCompiler) {
   c.registerMacro("importCompressedPLY", (ast: ASTNode, compiler: LispsmosCompiler): ASTNode[] => {
     // try parse ply
     let sunPosition = compiler.macroState.utility.keyValueStore.get("sunPosition").slice(1).map((e: string) => parseFloat(e));
-    console.log("SUN_POSITION:", sunPosition);
     let parsedPLY = tryLoadPLY(ast, compiler);
 
     let importedPLYName = ast[2];
@@ -300,7 +297,6 @@ export function register (c: LispsmosCompiler) {
             terrainsToUse.push(terrainValue);
           }
         });
-        console.log("TAGGED PARSED PLYS:", compiler.macroState.graphics.taggedParsedPLYs);
         /*Array.from(Object.values(terrains))*/terrainsToUse.forEach((otherTerrainPLYData: {raw: Map<string, ElementDescriptor>}) => {
           let otherTerrainPLY = otherTerrainPLYData.raw;
           let xVerts2 = getXVerts(otherTerrainPLY);
@@ -346,13 +342,11 @@ export function register (c: LispsmosCompiler) {
     let newRFaceColors: number[] = [];
     let newGFaceColors: number[] = [];
     let newBFaceColors: number[] = [];
-    console.log(newTriangles);
     newTriangles.forEach((newTriangleList, triangleListIndex) => {
       newTriangleList.forEach(newTriangle => {
         let newTriangleIndices: number[] = [];
         newIndices.push(newTriangleIndices);
         newTriangle.forEach(newVertex => {
-          //console.log("why the fuck isn't this working", newVertex);
           let indexOfVert = newXVerts.indexOf(newVertex[0]);
           let indexOfVertY = newYVerts.indexOf(newVertex[1]);
           let indexOfVertZ = newZVerts.indexOf(newVertex[2]);
@@ -380,7 +374,6 @@ export function register (c: LispsmosCompiler) {
     bFaceColors = newBFaceColors;
     vertexCount = xVerts.length;
     indexCount = indices.length;
-    console.log("NEW_DATA:", xVerts, yVerts, zVerts, indices, rFaceColors, gFaceColors, bFaceColors);
 
     let bakedLights = compiler.macroState.graphics.bakedLights;
     indices.forEach((triangle: number[], triangleIndex) => {
@@ -424,7 +417,6 @@ export function register (c: LispsmosCompiler) {
       //   }
       // });
       let brightness = Math.ceil(brightnessFactor * 4) / 4 * 0.5 + 0.5;
-      console.log("brightness: ", brightness, vert0, vert1, vert2, normal, lightDir);
       //if ) {
       rFaceColors[triangleIndex] *= brightness;
       gFaceColors[triangleIndex] *= brightness;
@@ -486,7 +478,6 @@ export function register (c: LispsmosCompiler) {
         numsToAppend[numsToAppend.length - 1] += vertexAsInt * Math.pow(2, numbersInCurrentNumber * 26);
         numbersInCurrentNumber++;
       });
-      console.log(numsToAppend.length)
       outAST = outAST.concat(numsToAppend.map(num => num.toString()));
     });
 
@@ -501,7 +492,6 @@ export function register (c: LispsmosCompiler) {
       indicesToAppend[indicesToAppend.length - 1] += indexAsInt * Math.pow(2, numbersInCurrentNumber * 10);
       numbersInCurrentNumber++;
     });
-    console.log(indicesToAppend.length)
     outAST = outAST.concat(indicesToAppend.map(num => num.toString()));
 
     [rFaceColors, gFaceColors, bFaceColors].forEach(colorArray => {
@@ -513,19 +503,9 @@ export function register (c: LispsmosCompiler) {
           colorsToAppend.push(0);
           numbersInCurrentNumber = 0;
         }
-        // if (numbersInCurrentNumber == 8) {
-        //   colorsToAppend[colorsToAppend.length - 1] += Math.pow(2, numbersInCurrentNumber * 6) * (colorAsInt % 32);
-        //   if (colorAsInt >= 32) {
-        //     colorsToAppend[colorsToAppend.length - 1] *= -1;
-        //   }
-        // } else {
           colorsToAppend[colorsToAppend.length - 1] += colorAsInt * Math.pow(2, numbersInCurrentNumber * 6);
-          //console.log(colorAsInt);
-       // }
         numbersInCurrentNumber++;
-        //console.log(colorAsInt, colorsToAppend[colorsToAppend.length - 1]);
       });
-      //console.log(colorsToAppend.length)
       outAST = outAST.concat(colorsToAppend.map(color => color.toString()));
     });
 

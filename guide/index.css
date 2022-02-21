@@ -1,0 +1,88 @@
+body {
+    font-family: sans-serif;
+    line-height: 1.4;
+    background: #121212;
+    color: #FFFFFF;
+}
+
+button {
+    background: #333333;
+    color: white;
+}
+
+a {
+  color: #bed3f2;  
+}
+a:visited {
+  color: #d4b9ff;  
+}
+
+main {
+    margin: auto;
+    width: 60%;
+}
+
+code, pre {
+    background: #333333;
+    border-radius: 5px;
+    padding: 2px;
+}
+
+h1 {
+    text-align: center;
+}
+
+nav {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+}
+
+table, th, td {
+    border: 1px solid #444444;
+    border-collapse: collapse;
+}
+
+table {
+    margin: auto;
+}
+
+td {
+    text-align: left;
+}
+
+td code {
+    margin: 2px;
+    display: block;
+}
+
+.collapser {
+    width: 100%;
+    border: none;
+    border-radius: 5px;
+    background: #222222;
+    text-align: left;
+    font-size: 1em;
+    font-weight: bold;
+}
+
+.equation {
+    color: white;
+    border-color: #333333;
+    border-radius: 5px;
+}
+
+.equation * {
+    border-color: white;
+}
+
+
+
+.collapsible p {
+    width: 85%;
+    margin: auto;
+}
+
+h3 {
+    margin-left: 7.5%;
+}

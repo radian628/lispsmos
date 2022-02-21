@@ -25,7 +25,6 @@ export class ExpressionCompiler {
       case "object":
         switch (typeof astNode[0]) {
           case "object":
-            console.log(astNode);
             for (let astChildNode of astNode) {
               outStr += this.astNodeToDesmosExpressions(astChildNode) + "\n";
             }
