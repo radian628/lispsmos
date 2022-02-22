@@ -1,8 +1,9 @@
 body {
     font-family: sans-serif;
     line-height: 1.4;
-    background: #121212;
+    background: #000000;
     color: #FFFFFF;
+    margin: 0px;
 }
 
 button {
@@ -17,10 +18,6 @@ a:visited {
   color: #d4b9ff;  
 }
 
-main {
-    margin: auto;
-    width: 60%;
-}
 
 code, pre {
     background: #333333;
@@ -53,6 +50,9 @@ td {
 
 td code {
     margin: 2px;
+}
+
+.block-code {
     display: block;
 }
 
@@ -80,9 +80,35 @@ td code {
 
 .collapsible p {
     width: 85%;
-    margin: auto;
+    margin-left: 8%;
 }
 
 h3 {
-    margin-left: 7.5%;
+    margin-left: 4%;
+}
+
+section {
+    width: 60%;
+    margin: auto;
+    margin-bottom: 15px;
+}
+
+section:nth-child(2n) {
+    background: #181818;
+    border-radius: 5px;
+}
+section:nth-child(2n+1) {
+    background: #0b0b0b;
+    border-radius: 5px;
+}
+
+h2 {
+    margin-top: 0;
+}
+
+.standalone-code-block {
+    margin: auto;
+    width: 75%;
+    margin-top: 25px;
+    margin-bottom: 25px;
 }

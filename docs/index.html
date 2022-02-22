@@ -11,17 +11,29 @@
             <button id="collapse-all">Collapse All Sections</button>
         </nav>
         <main>
-            <h2>About this guide</h2>
-            <p>This is a guide to LISPsmos, the programming language which compiles to Desmos expressions. This document is CTRL+F-friendly, so if you're looking to do a specific thing, just hit Ctrl+F, and you'll be likely to find the result with few (if any) false positives!</p>
-            <h2>Installation / Quick Start</h2>
+            <section>
+                <h2>About this guide</h2>
+                <div class="collapsible">
+                    <p>This is a guide to LISPsmos, the programming language which compiles to Desmos expressions. This document is CTRL+F-friendly, so if you're looking to do a specific thing, just hit Ctrl+F, and you'll be likely to find the result with few (if any) false positives!</p>
+                </div>
+            </section>
+            <section>
+            <h2>What is LISPsmos?</h2>
             <div class="collapsible">
-                <ol>
-                    <li>Get <a href="https://nodejs.org/en/">NodeJS</a>, if you haven't already.</li>
-                    <li>Create a directory in which you will put your first LISPsmos project. Call it whatever you want.</li>
-                    <li>Go to the terminal, navigate to the directory you've created, and type in <code>npm install lispsmos</code>. This will allow you to use LISPsmos </li>
-                    <li>Create a file <code>index.mjs</code> in the directory. Paste the following code into index.js:
+                <p>I like to create horrendously overcomplicated things in Desmos&mdash; a <a href="https://www.desmos.com/calculator/cyowyumn0a">3D maze</a>, a <a href="https://www.desmos.com/calculator/qclatqetzf">photorealistic 3D fractal that took ten hours to render</a>, and <a href="https://www.desmos.com/calculator/l7nehb64nz">a 3D game where you fly a plane</a>, to name a few. However, working in Desmos is somewhat challenging... to say the least. So I wanted to create a tool to make it easier. And thus, I created LISPsmos.</p>
+                <p>LISPsmos is&mdash; put simply&dash; a programming language that compiles to Desmos expressions. Well, it's kind of more than that: It's a text-based language you can use to build entire Desmos graphs from the ground up.</p>
+            </div>
+            </section>
+            <section>
+                <h2>Installation / Quick Start</h2>
+                <div class="collapsible">
+                    <ol>
+                        <li>Get <a href="https://nodejs.org/en/">NodeJS</a>, if you haven't already.</li>
+                        <li>Create a directory in which you will put your first LISPsmos project. Call it whatever you want.</li>
+                        <li>Go to the terminal, navigate to the directory you've created, and type in <code>npm install lispsmos</code>. This will allow you to use LISPsmos </li>
+                        <li>Create a file <code>index.mjs</code> in the directory. Paste the following code into index.mjs:
 <code>
-    <pre>
+    <pre class="standalone-code-block">
 import * as lispsmos from "lispsmos";
 
 lispsmos.buildServer(async () => {
@@ -31,166 +43,246 @@ lispsmos.buildServer(async () => {
 })
     </pre>
 </code>
-This code will create a web server which&mdash; when accessed&mdash; will compile some LISPsmos code into a Desmos Graph state object and send it to whoever requested it. We will use this web server to compile LISPsmos code and send it to Desmos where it can be displayed as a graph.
-                    </li>
-                    <li>Type <code>node index.mjs</code> to start the web server.</li>
-                    <li>Try testing your web server by going to <a href="http://localhost:8090">http://localhost:8090</a>. You can use a custom port and hostname (second and third parameter to <code>buildServer</code>) if you so desire.</li>
-                    <li>Now that we've created a LISPsmos server, we need to tell Desmos how to receive the LISPsmos graph. First, get <a href="https://www.tampermonkey.net/">Tampermonkey</a>.</li>
-                    <li>Install <a href="https://gist.github.com/radian628/27f73fb2f2675b24c363fa8186bdce13/raw/b90570ba659fc509cdf57a060f5945e7287af51a/desmos-state-grabber.user.js">this Tampermonkey userscript</a>, which will add a text box to Desmos which will enable you to load Desmos graph state from any source.</li>
-                    <li>Once the userscript is installed and enabled, find the new textbox in Desmos in the bottom-right corner, type <code>http://localhost:8090</code> into it, and press the "Grab State" button. You should see that the graph has changed to show the equation Y=x<sup>3</sup>. This userscript does the exact same thing that you did when you tried to go to <a href="http://localhost:8090">http://localhost:8090</a>&mdash; it requests the Desmos state, which the server promptly compiles. However, after that, it gives the graph state to Desmos, which displays it like it would any other graph.</li>
-                </ol>
+    This code will create a web server which&mdash; when accessed&mdash; will compile some LISPsmos code into a Desmos Graph state object and send it to whoever requested it. We will use this web server to compile LISPsmos code and send it to Desmos where it can be displayed as a graph.
+                        </li>
+                        <li>Type <code>node index.mjs</code> to start the web server.</li>
+                        <li>Try testing your web server by going to <a href="http://localhost:8090">http://localhost:8090</a>. You can use a custom port and hostname (second and third parameter to <code>buildServer</code>) if you so desire.</li>
+                        <li>Now that we've created a LISPsmos server, we need to tell Desmos how to receive the LISPsmos graph. First, get <a href="https://www.tampermonkey.net/">Tampermonkey</a>.</li>
+                        <li>Install <a href="https://gist.github.com/radian628/27f73fb2f2675b24c363fa8186bdce13/raw/b90570ba659fc509cdf57a060f5945e7287af51a/desmos-state-grabber.user.js">this Tampermonkey userscript</a>, which will add a text box to Desmos which will enable you to load Desmos graph state from any source.</li>
+                        <li>Once the userscript is installed and enabled, find the new textbox in Desmos in the bottom-right corner, type <code>http://localhost:8090</code> into it, and press the "Grab State" button. You should see that the graph has changed to show the equation Y=x<sup>3</sup>. This userscript does the exact same thing that you did when you tried to go to <a href="http://localhost:8090">http://localhost:8090</a>&mdash; it requests the Desmos state, which the server promptly compiles. However, after that, it gives the graph state to Desmos, which displays it like it would any other graph.</li>
+                    </ol>
+                    <p>If you managed to get everything in this section working, move onto the next section.</p>
+                </div>
+            </section>
+            <section>
+                <h2>Installation, Continued</h2>
+                <div class="collapsible">
+                    <p>The web server we created in the last part was a minimal example&mdash; enough to get LISPsmos working, but a very suboptimal way of using it. You may have noticed that we are directly compiling a string literal. As you can imagine, this will be inconvenient to edit, should we want to add more LISPsmos code. Let's make it get the LISPsmos code from a file called <code>main.lisp</code> instead. Replace the contents of <code>index.mjs</code> with the following: </p>
+                 <code>
+                    <pre class="standalone-code-block">
+                        import * as lispsmos from "lispsmos";
+                        import * as fs from "node:fs";
+                        
+                        lispsmos.buildServer(async () => {
+                          let compiler = new lispsmos.compiler.LispsmosCompiler();
+                          lispsmos.utilityMacros.register(compiler);
+                          console.log("Compiled!");
+                          return await compiler.compile(fs.readFileSync("main.lisp"))
+                        })
+                    </pre>
+                </code>
+                <p>Now, create a file <code>main.lisp</code> in the same directory and put the following in it:</p>
+                <code>
+                   <pre class="standalone-code-block">(displayMe (= y (^ x 3)))</pre>
+               </code>
+               <p>If you try running the web server again, you should end up displaying the same equation as before. However, this time, LISPsmos will be compiling the code in the file <code>main.lisp</code>, not the string literal.</p>
             </div>
-            <h2>Syntax</h2>
-            <div class="collapsible">
-                <h3>Polish Notation</h3>
-                <p>LISPsmos follows an extremely simple (but quite unorthodox) syntax called Polish notation. Normally, when you're doing math&mdash; for instance, <code>1 + 2 + 3</code>&mdash; you put the operator <code>+</code> between the operands <code>1</code>, <code>2</code>, and <code>3</code>. In LISPsmos, which uses Polish notation, you would write the same expression like this: <code>(+ 1 2 3)</code>. The first thing in the list&mdash; the "<code>+</code>," is treated as an operator, whereas everything after it is treated as its operands. This may seem very odd to some. However, there are some advantages to this approach which I hope you will come to appreciate: For one, it's extremely consistent&mdash; <i>every</i> operator in LISPsmos works like this, making one's mental model of the syntax much simpler. For another advantage, it also cuts down on extra operators. Notice how we only used a single <code>+</code> by using Polish notation. Conversely, with the more "standard" infix notation, we used two of them! On top of all this, Polish notation isn't actually that far off from what we already do with other functions: For instance, <code>sin(x)</code> becomes <code>(sin x)</code> and <code>mod(x, 2)</code> becomes <code>(mod x 2)</code>.</p>
-                <p>Do be aware, however, that the <i>semantics</i> of LISPsmos are somewhat more complicated than this at times&mdash; some complex operators may define slightly different rules that do not exist outside of them (which will be explained as they come up). However, the underlying syntax will remain the same.</p>
-                <h3>Basic Examples</h3>
-                <p>Here are some examples of LISPsmos syntax compared to (approximately) how they would appear in Desmos:</p>
-                <table>
-                    <tr><th>LISPsmos</th><th>Desmos Output (approx)</th></tr>
-                    <tr>
-                        <td><code>(+ 1 2 3 4 5)</code></td>
-                        <td><span class="equation">\left(1+2+3+4+5\right)</span></td>
-                    </tr>
-                    <tr>
-                        <td><code>(* 5 (+ 2 3))</code></td>
-                        <td><span class="equation">\left(5*\left(2+3\right)\right)</span></td>
-                    </tr>
-                    <tr>
-                        <td><code>(sin (* 3 x))</code></td>
-                        <td><span class="equation">\sin\left(\left(3*x\right)\right)</span></td>
-                    </tr>
-                </table>
-            </div>
-            <h2>Variables</h2>
-            <div class="collapsible">
-                <p>Create a variable with the <code>=</code> operator. Be aware that (like everything in LISPsmos) this follows Polish notation. Here is an example</p>
-                <table>
-                    <tr><th>LISPsmos</th><th>Desmos Output (approx)</th></tr>
-                    <tr>
-                        <td><code>(= a 5)</code></td>
-                        <td><span class="equation">a=5</span></td>
-                    </tr>
-                    <tr>
-                        <td><code>(= y (^ x 2))</code></td>
-                        <td><span class="equation">y=x^{2}</span></td>
-                    </tr>
-                </table>
-                <p>Variables can have multi-character names. LISPsmos will represent these with subscripts in Desmos.</p>
-                <table>
-                    <tr><th>LISPsmos</th><th>Desmos Output (approx)</th></tr>
-                    <tr>
-                        <td><code>(= foo 12)</code></td>
-                        <td><span class="equation">f_{oo}=12</span></td>
-                    </tr>
-                </table>
-            </div>
-            <h2>Functions</h2>
-            <div class="collapsible">
-                <p>Create a function with the <code>fn</code> keyword, followed by its name, then its arguments separated by spaces, and then finally its actual definition in a single block. Take note of the second example&mdash; LISPsmos does not care about line breaks in the middle of expressions. Use them to make long expressions easier to read.</p>
-                <table>
-                    <tr><th>LISPsmos</th><th>Desmos Output (approx)</th></tr>
-                    <tr>
-                        <td><code>(fn square x (^ x 2))<br>
-                                (square 4)
-                        </code></td>
-                        <td><span class="equation">s_{quare}\left(x\right)=x^{2}</span><br><span class="equation">s_{quare}\left(4\right)</span></td>
-                    </tr>
-                    <tr>
-                        <td><code><pre>(fn dist x1 y1 x2 y2 (sqrt (+ 
-    (^ (- x1 x2) 2)
-    (^ (- y1 y2) 2)
-)))</pre></code></td>
-                        <td><span class="equation">d_{ist}\left(x_{1},y_{1},x_{2},y_{2}\right)=\sqrt{\left(\left(x_{1}-x_{2}\right)^{2}+\left(y_{1}-y_{2}\right)^{2}\right)}</span></td>
-                    </tr>
-                </table>
-            </div>
-            <h2>Display/Show Expressions</h2>
-            <div class="collapsible">
-                <h3>Display an Expression</h3>
-                <p>Up until now, you won't have seen anything on the screen upon loading your LISPsmos expressions. This changes now&mdash; use the <code>displayMe</code> operator to display an expression. The expression should be the first argument to <code>displayMe</code>. Be warned that you can only put a single expression into displayMe.</p>
-                <table>
-                    <tr><th>LISPsmos</th><th>Desmos Output (approx)</th></tr>
-                    <tr>
-                        <td><code>(displayMe (= y x))
-                        </code></td>
-                        <td><span class="equation">y=x</span></td>
-                    </tr>
-                </table>
-                <h3>Display Properties</h3>
-                <p>You can set "display properties" of an expression to customize the way it is displayed. For instance, the graph produced by the following LISPsmos code (not shown on screen) will have a line width of 20 pixels, be dotted, have 20% opacity, and be a bright red color.</p>                
-                <table>
-                    <tr><th>LISPsmos</th><th>Desmos Output (approx)</th></tr>
-                    <tr>
-                        <td><code><pre>(displayMe (= y x)
-    (lineWidth 20)
-    (lineStyle DOTTED)
-    (lineOpacity 0.2)
-    (color RED)
-)</code></pre></td>
-                        <td><span class="equation">y=x</span></td>
-                    </tr>
-                </table>
-            </div>
-            <h2>Points</h2>
-            <div class="collapsible">
-                <p>Create a point with the builtin <code>point</code> function, like so:</p>
-                <table>
-                    <tr><th>LISPsmos</th><th>Desmos Output (approx)</th></tr>
-                    <tr>
-                        <td><code>(point 0 0)</code></td>
-                        <td><span class="equation">\left(0,0\right)</span></td>
-                    </tr>
-                </table>
-            </div>
-            <h2>Lists</h2>
-            <div class="collapsible">
-                <p>Create a list with the builtin <code>list</code> function. These lists can also contain ranges with <code>...</code></p>
-                <table>
-                    <tr><th>LISPsmos</th><th>Desmos Output (approx)</th></tr>
-                    <tr>
-                        <td><code>(list 1 2 3 4 5 6 7)</code></td>
-                        <td><span class="equation">\left[1,2,3,4,5,6,7\right]</span></td>
-                    </tr>
-                    <tr>
-                        <td><code>(list 1 ... 20)</code></td>
-                        <td><span class="equation">\left[1,...,20\right]</span></td>
-                    </tr>
-                </table>
-            </div>
-            <h2>Piecewises</h2>
-            <div class="collapsible">
-                <p>Create a piecewise with the builtin <code>piecewise</code> function. Every argument to the piecewise function takes the form of a parenthesized pair of statements. The first one is the condition for that branch of the piecewise, whereas the second is the value which the piecewise is to evaluate to.</p>
-                <table>
-                    <tr><th>LISPsmos</th><th>Desmos Output (approx)</th><th>Description</th></tr>
-                    <tr>
-                        <td><code>(piecewise ((&gt; x 0) x) ((&lt;= x 0) (* -1 x)))</code></td>
-                        <td><span class="equation">\left\{x&gt;0:x,x&lt;=0:\left(-1*x\right)\right\}</span></td>
-                        <td>The absolute value function, represented as a piecewise.</td>
-                    </tr>
-                    <tr>
-                        <td><code>(piecewise ((&gt; x 0) x) ((* -1 x)))</code></td>
-                        <td><span class="equation">\left\{x>0:x,\left(-1*x\right)\right\}</span></td>
-                        <td>The condition for the <i>last</i> branch of the piecewise can be omitted to mean that it should be used when none of the other branches match.</td>
-                    </tr>
-                </table>
-            </div>
-            <h2>Actions</h2>
-            <div class="collapsible">
-                <p>Just as a variable can be created with <code>=</code>, an action can be created with <code>-&gt;</code>.</p>
-                <table>
-                    <tr><th>LISPsmos</th><th>Desmos Output (approx)</th><th>Description</th></tr>
-                    <tr>
-                        <td><code>(= a 0)<br>(-&gt; a (+ a 1))</code></td>
-                        <td><span class="equation">a=0</span><br><span class="equation">a\to\left(a+1\right)</span></td>
-                    </tr>
-                </table>
-            </div>
-            <h2>Viewport/Graph Bounds</h2>
-            <div class="collapsible">
-                <p>Want to change the size of the default starting graph? LISPsmos can do that too. For instance, the line <code>(viewport -2 2 -2 2)</code> will try to make the graph range from -2 to 2 on the x-axis, and -2 to 2 on the y-axis. However, Desmos will still try to preserve aspect ratio, so this will not be exact!</p>
-            </div>
+            </section>
+            <section>
+                <h2>Syntax</h2>
+                <div class="collapsible">
+                    <h3>Polish Notation</h3>
+                    <p>LISPsmos follows an extremely simple (but quite unorthodox) syntax called Polish notation. Normally, when you're doing math&mdash; for instance, <code>1 + 2 + 3</code>&mdash; you put the operator <code>+</code> between the operands <code>1</code>, <code>2</code>, and <code>3</code>. In LISPsmos, which uses Polish notation, you would write the same expression like this: <code>(+ 1 2 3)</code>. The first thing in the list&mdash; the "<code>+</code>," is treated as an operator, whereas everything after it is treated as its operands. This may seem very odd to some. However, there are some advantages to this approach which I hope you will come to appreciate: For one, it's extremely consistent&mdash; <i>every</i> operator in LISPsmos works like this, making one's mental model of the syntax much simpler. For another advantage, it also cuts down on extra operators. Notice how we only used a single <code>+</code> by using Polish notation. Conversely, with the more "standard" infix notation, we used two of them! On top of all this, Polish notation isn't actually that far off from what we already do with other functions: For instance, <code>sin(x)</code> becomes <code>(sin x)</code> and <code>mod(x, 2)</code> becomes <code>(mod x 2)</code>.</p>
+                    <p>Do be aware, however, that the <i>semantics</i> of LISPsmos are somewhat more complicated than this at times&mdash; some complex operators may define slightly different rules that do not exist outside of them (which will be explained as they come up). However, the underlying syntax will remain the same.</p>
+                    <h3>Basic Examples</h3>
+                    <p>Here are some examples of LISPsmos syntax compared to (approximately) how they would appear in Desmos:</p>
+                    <table>
+                        <tr><th>LISPsmos</th><th>Desmos Output (approx)</th></tr>
+                        <tr>
+                            <td><code class="block-code">(+ 1 2 3 4 5)</code></td>
+                            <td><span class="equation">\left(1+2+3+4+5\right)</span></td>
+                        </tr>
+                        <tr>
+                            <td><code class="block-code">(* 5 (+ 2 3))</code></td>
+                            <td><span class="equation">\left(5*\left(2+3\right)\right)</span></td>
+                        </tr>
+                        <tr>
+                            <td><code class="block-code">(sin (* 3 x))</code></td>
+                            <td><span class="equation">\sin\left(\left(3*x\right)\right)</span></td>
+                        </tr>
+                    </table>
+                </div>
+            </section>
+            <section>
+                <h2>Variables</h2>
+                <div class="collapsible">
+                    <p>Create a variable with the <code>=</code> operator. Be aware that (like everything in LISPsmos) this follows Polish notation. Here is an example</p>
+                    <table>
+                        <tr><th>LISPsmos</th><th>Desmos Output (approx)</th></tr>
+                        <tr>
+                            <td><code class="block-code">(= a 5)</code></td>
+                            <td><span class="equation">a=5</span></td>
+                        </tr>
+                        <tr>
+                            <td><code class="block-code">(= y (^ x 2))</code></td>
+                            <td><span class="equation">y=x^{2}</span></td>
+                        </tr>
+                    </table>
+                    <p>Variables can have multi-character names. LISPsmos will represent these with subscripts in Desmos.</p>
+                    <table>
+                        <tr><th>LISPsmos</th><th>Desmos Output (approx)</th></tr>
+                        <tr>
+                            <td><code class="block-code">(= foo 12)</code></td>
+                            <td><span class="equation">f_{oo}=12</span></td>
+                        </tr>
+                    </table>
+                </div>
+            </section>
+            <section>
+                <h2>Functions</h2>
+                <div class="collapsible">
+                    <p>Create a function with the <code>fn</code> keyword, followed by its name, then its arguments separated by spaces, and then finally its actual definition in a single block. Take note of the second example&mdash; LISPsmos does not care about line breaks in the middle of expressions. Use them to make long expressions easier to read.</p>
+                    <table>
+                        <tr><th>LISPsmos</th><th>Desmos Output (approx)</th></tr>
+                        <tr>
+                            <td><code class="block-code">(fn square x (^ x 2))<br>
+                                    (square 4)
+                            </code></td>
+                            <td><span class="equation">s_{quare}\left(x\right)=x^{2}</span><br><span class="equation">s_{quare}\left(4\right)</span></td>
+                        </tr>
+                        <tr>
+                            <td><code class="block-code"><pre>(fn dist x1 y1 x2 y2 (sqrt (+ 
+        (^ (- x1 x2) 2)
+        (^ (- y1 y2) 2)
+    )))</pre></code></td>
+                            <td><span class="equation">d_{ist}\left(x_{1},y_{1},x_{2},y_{2}\right)=\sqrt{\left(\left(x_{1}-x_{2}\right)^{2}+\left(y_{1}-y_{2}\right)^{2}\right)}</span></td>
+                        </tr>
+                    </table>
+                </div>
+            </section>
+            <section>
+                <h2>Display/Show Expressions</h2>
+                <div class="collapsible">
+                    <h3>Display an Expression</h3>
+                    <p>Up until now, you won't have seen anything on the screen upon loading your LISPsmos expressions. This changes now&mdash; use the <code>displayMe</code> operator to display an expression. The expression should be the first argument to <code>displayMe</code>. Be warned that you can only put a single expression into displayMe.</p>
+                    <table>
+                        <tr><th>LISPsmos</th><th>Desmos Output (approx)</th></tr>
+                        <tr>
+                            <td><code class="block-code">(displayMe (= y x))
+                            </code></td>
+                            <td><span class="equation">y=x</span></td>
+                        </tr>
+                    </table>
+                    <h3>Display Properties</h3>
+                    <p>You can set "display properties" of an expression to customize the way it is displayed. For instance, the graph produced by the following LISPsmos code (not shown on screen) will have a line width of 20 pixels, be dotted, have 20% opacity, and be a bright red color.</p>                
+                    <table>
+                        <tr><th>LISPsmos</th><th>Desmos Output (approx)</th></tr>
+                        <tr>
+                            <td><code class="block-code"><pre>(displayMe (= y x)
+        (lineWidth 20)
+        (lineStyle DOTTED)
+        (lineOpacity 0.2)
+        (color RED)
+    )</code></pre></td>
+                            <td><span class="equation">y=x</span></td>
+                        </tr>
+                    </table>
+                </div>
+            </section>
+            <section>
+                <h2>Points</h2>
+                <div class="collapsible">
+                    <table>
+                        <tr><th>LISPsmos</th><th>Desmos Output (approx)</th><th>Description</th></tr>
+                        <tr>
+                            <td><code class="block-code">(point 0 0)</code></td>
+                            <td><span class="equation">\left(0,0\right)</span></td>
+                            <td>Creates a point at the origin, (0, 0).</td>
+                        </tr>
+                        <tr>
+                            <td><code class="block-code">(= pt (point 3 4))<br>(.x pt)</code></td>
+                            <td><span class="equation">p_{t}=\left(3,4\right)</span><br><span class="equation">p_{t}.x</span></td>
+                            <td>Creates a point called p<sub>t</sub>, and then finds its x-coordinate with the ".x" operator. The second expression should evaluate to 3.</td>
+                        </tr>
+                    </table>
+                </div>
+            </section>
+            <section>
+                <h2>Lists</h2>
+                <div class="collapsible">
+                    <p>Create a list with the builtin <code>list</code> function. These lists can also contain ranges with <code>...</code></p>
+                    <table>
+                        <tr><th>LISPsmos</th><th>Desmos Output (approx)</th></tr>
+                        <tr>
+                            <td><code class="block-code">(list 1 2 3 4 5 6 7)</code></td>
+                            <td><span class="equation">\left[1,2,3,4,5,6,7\right]</span></td>
+                        </tr>
+                        <tr>
+                            <td><code class="block-code">(list 1 ... 20)</code></td>
+                            <td><span class="equation">\left[1,...,20\right]</span></td>
+                        </tr>
+                    </table>
+                </div>
+            </section>
+            <section>
+                <h2>Piecewises</h2>
+                <div class="collapsible">
+                    <p>Create a piecewise with the builtin <code>piecewise</code> function. Every argument to the piecewise function takes the form of a parenthesized pair of statements. The first one is the condition for that branch of the piecewise, whereas the second is the value which the piecewise is to evaluate to.</p>
+                    <table>
+                        <tr><th>LISPsmos</th><th>Desmos Output (approx)</th><th>Description</th></tr>
+                        <tr>
+                            <td><code class="block-code">(piecewise ((&gt; x 0) x) ((&lt;= x 0) (* -1 x)))</code></td>
+                            <td><span class="equation">\left\{x&gt;0:x,x&lt;=0:\left(-1*x\right)\right\}</span></td>
+                            <td>The absolute value function, represented as a piecewise.</td>
+                        </tr>
+                        <tr>
+                            <td><code class="block-code">(piecewise ((&gt; x 0) x) ((* -1 x)))</code></td>
+                            <td><span class="equation">\left\{x>0:x,\left(-1*x\right)\right\}</span></td>
+                            <td>The condition for the <i>last</i> branch of the piecewise can be omitted to mean that it should be used when none of the other branches match.</td>
+                        </tr>
+                    </table>
+                </div>
+            </section>
+            <section>
+                <h2>Actions</h2>
+                <div class="collapsible">
+                    <p>Just as a variable can be created with <code>=</code>, an action can be created with <code>-&gt;</code>.</p>
+                    <table>
+                        <tr><th>LISPsmos</th><th>Desmos Output (approx)</th><th>Description</th></tr>
+                        <tr>
+                            <td><code class="block-code">(= a 0)<br>(-&gt; a (+ a 1))</code></td>
+                            <td><span class="equation">a=0</span><br><span class="equation">a\to\left(a+1\right)</span></td>
+                        </tr>
+                    </table>
+                </div>
+            </section>
+            <section>
+                <h2>Viewport/Graph Bounds</h2>
+                <div class="collapsible">
+                    <p>Want to change the size of the default starting graph? LISPsmos can do that too. For instance, the line <code>(viewport -2 2 -2 2)</code> will try to make the graph range from -2 to 2 on the x-axis, and -2 to 2 on the y-axis. However, Desmos will still try to preserve aspect ratio, so this will not be exact!</p>
+                </div>
+            </section>
+            <section>
+                <h2>Folders</h2>
+                <div class="collapsible">
+                    <p>Create a folder with the <code>folder</code> function. The following defines a folder named "equations":</p>
+                    <code><pre class="standalone-code-block">(folder ((title "equations"))
+    (= y x)
+    (= y (^ x 2))
+    (= y (^ x 3))                   
+)</pre></code>
+                </div>
+            </section>
+            <section>
+                <h2>Macros</h2>
+                <div class="collapsible">
+                    <p>Macros are one of LISPsmos's most powerful features. They allow you to eliminate repetitive sections of code which would otherwise be tedious to write by hand. Macros are not enabled by default in LISPsmos&mdash; you can enable them by adding the following line to your JS file immediately after defining the variable <code>compiler</code>:</p>
+                    <code>lispsmos.utilityMacros.register(compiler);</code>
+                    <table>
+                        <tr><th>LISPsmos</th><th>Desmos Output (approx)</th><th>Description</th></tr>
+                        <tr>
+                            <td><code class="block-code">(defineFindAndReplace plusOne variable ((+ variable 1)))<br>(plusOne x)</code></td>
+                            <td><span class="equation">\left(x+1\right)</span></td>
+                            <td>The first line of LISPsmos code defines a "find-and-replace" macro called <code>plusOne</code>. This macro takes a single argument called <code>variable</code> and returns a statement which adds one to that variable. The second line of code calls that macro with x as a parameter. You can imagine an intermediate step here where <code>(plusOne x)</code> is substituted with <code>(+ variable 1)</code> (as per the macro definition)&mdash; except <code>variable</code> is <code>x</code> (since we're calling <code>plusOne</code> with <code>x</code>), so we end up with <code>(+ x 1)</code></td>
+                        </tr>
+                        <tr>
+                            <td><code class="block-code">(inlineJS "return [['=', 'y', ['*', 'x', '3']]]")</code></td>
+                            <td><span class="equation">y=\left(x*3\right)</span></td>
+                            <td><code>inlineJS</code> macros are an extremely powerful feature of LISPsmos that let you define snippets of JavaScript code that create parsed LISPsmos code at compile time. Parsed LISPsmos code becomes what I call "AST Nodes." An AST Node can be one of two things: a string, or an array of AST Nodes. An AST node represents a list of items enclosed within parentheses, whereas a string represents an individual item&mdash; a variable, operator, function name, macro name, et cetera.</td>
+                        </tr>
+                    </table>
+                </div>
+            </section>
         </main>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
         <script src="./mathquill/mathquill.min.js"></script>

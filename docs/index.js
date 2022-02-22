@@ -24,7 +24,7 @@ Array.from(document.querySelectorAll(".collapsible")).forEach(div => {
         expanded = !expanded;
         if (expanded) {
             div.style.display = "";
-            collapser.style.background = "#444444";
+            collapser.style.background = "#363636";
         } else {
             div.style.display = "none";
             collapser.style.background = "";
@@ -42,7 +42,7 @@ document.getElementById("expand-all").onclick = function () {
         div.style.display = "";
     });
     Array.from(document.querySelectorAll(".collapser")).forEach(collapser => {
-        collapser.style.background = "#444444";
+        collapser.style.background = "#363636";
     });
 }
 document.getElementById("collapse-all").onclick = function () {
