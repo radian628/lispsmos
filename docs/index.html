@@ -11,6 +11,7 @@
             <button id="collapse-all">Collapse All Sections</button>
         </nav>
         <main>
+            <p><a href="https://github.com/radian628/lispsmos">Source code here</a></p>
             <section>
                 <h2>About this guide</h2>
                 <div class="collapsible">
@@ -60,15 +61,15 @@ lispsmos.buildServer(async () => {
                     <p>The web server we created in the last part was a minimal example&mdash; enough to get LISPsmos working, but a very suboptimal way of using it. You may have noticed that we are directly compiling a string literal. As you can imagine, this will be inconvenient to edit, should we want to add more LISPsmos code. Let's make it get the LISPsmos code from a file called <code>main.lisp</code> instead. Replace the contents of <code>index.mjs</code> with the following: </p>
                  <code>
                     <pre class="standalone-code-block">
-                        import * as lispsmos from "lispsmos";
-                        import * as fs from "node:fs";
-                        
-                        lispsmos.buildServer(async () => {
-                          let compiler = new lispsmos.compiler.LispsmosCompiler();
-                          lispsmos.utilityMacros.register(compiler);
-                          console.log("Compiled!");
-                          return await compiler.compile(fs.readFileSync("main.lisp"))
-                        })
+import * as lispsmos from "lispsmos";
+import * as fs from "node:fs";
+
+lispsmos.buildServer(async () => {
+    let compiler = new lispsmos.compiler.LispsmosCompiler();
+    lispsmos.utilityMacros.register(compiler);
+    console.log("Compiled!");
+    return await compiler.compile(fs.readFileSync("main.lisp"))
+})
                     </pre>
                 </code>
                 <p>Now, create a file <code>main.lisp</code> in the same directory and put the following in it:</p>
