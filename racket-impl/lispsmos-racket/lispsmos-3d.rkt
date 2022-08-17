@@ -322,7 +322,22 @@
                     (floor (* 67108864 u))
                     (* 67108864 (floor (* 67108864 v)))
                 )
-            ))))))
+            ))))
+        (= barycentrics (+
+            (+ 33554432 (floor (* 4096 u)))
+            (* 67108864 (+ 33554432 (floor (* 4096 v))))
+        ))
+        (fn (muller-trumbore-full-data-with-invalid-barycentrics
+            x-ray y-ray z-ray
+            x-dir y-dir z-dir
+            x-tri1 y-tri1 z-tri1
+            x-tri2 y-tri2 z-tri2
+            x-tri3 y-tri3 z-tri3
+        ) (
+                point
+                t
+                barycentrics
+            ))))
 
 (provide muller-trumbore-ray-triangle-intersection-formula
         lispsmos-static-dot

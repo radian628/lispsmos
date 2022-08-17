@@ -1,0 +1,43 @@
+alias primes_remaining r0
+alias primes_count r1
+alias current_number r2
+alias current_number_for_testing
+
+alias inner_loop_counter
+alias is_prime
+
+alias test_number
+
+alias prime_output_pointer
+
+mov primes_count 10
+mov primes_remaining primes_count
+mov current_number 2
+
+dst _prime_finding_loop
+
+    mov inner_loop_counter current_number
+    sub inner_loop_counter 2
+    mov is_prime 1
+    mov test_number 2
+    dst _prime_checking_loop
+
+        mod current_number_for_testing test_number
+        add test_number 1
+
+    jnz inner_loop_counter _prime_checking_loop
+
+    mov is_prime 0
+
+    dst _prime_found
+
+    jz is_prime _skip_decrement_primes_found
+
+        sub primes_remaining 1
+        mov @prime_output_pointer current_number
+        add prime_output_pointer 1
+
+    dst _skip_decrement_primes_found
+
+    add current_number 1
+jnz primes_remaining _prime_finding_loop

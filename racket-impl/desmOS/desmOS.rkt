@@ -1,7 +1,7 @@
 #lang racket
 
 (require 
-    "lispsmos-racket/lispsmos.rkt")
+    "../lispsmos-racket/lispsmos.rkt")
 
 (define instr-index 0)
 
@@ -160,23 +160,6 @@
         (= memwrite1 ,(get-instr))
         (fn (memwrite dst src size)
             (+ memwrite1 (ternop dst src size)))
-        ; move cache instructions (data reg1; index reg2)
-        ; (= getcache ,(get-instr))
-        ; (= setcache ,(get-instr))
-
-        ; ; swap instructions
-        ; (= swap12 ,(get-instr))
-        ; (= swap13 ,(get-instr))
-        ; (= swap23 ,(get-instr))
-        ; (= swap14 ,(get-instr))
-        ; (= swap24 ,(get-instr))
-        ; (= swap34 ,(get-instr))
-
-        ; ; jump instructions (ptr reg1)
-        ; (= jmp ,(get-instr))
-
-        ; ; jump if true (ptr reg1, val reg2)
-        ; (= jt ,(get-instr))
     )
 
     (folder ("memory" #t)
