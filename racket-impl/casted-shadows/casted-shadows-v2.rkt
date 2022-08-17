@@ -19,33 +19,26 @@
 
 
 
-(define (symbol-append . args)
-    (string->symbol (apply string-append (map symbol->string args))))
 
 
 (define (shadowcast-pos-dimension dim)
     `(= ,(symbol-append 'shadowcast-positions dim)
-        ;(for 
-            (+
-                (*
-                    shadowcast-barycentric-coord-1
-                    (get ,(symbol-append dim '-vpos-r2) (get vertex-indices receiver-data))
-                )
-                (*
-                    shadowcast-barycentric-coord-2
-                    (get ,(symbol-append dim '-vpos-r2)  (get vertex-indices (+ 1 receiver-data)))
-                )
-                (*
-                    (- 1 
-                        shadowcast-barycentric-coord-1 
-                        shadowcast-barycentric-coord-2 )
-                    (get ,(symbol-append dim '-vpos-r2)  (get vertex-indices (+ 2 receiver-data)))
-                )
+        (+
+            (*
+                shadowcast-barycentric-coord-1
+                (get ,(symbol-append dim '-vpos-r2) (get vertex-indices receiver-data))
             )
-        ;     (tri-index2 (list 0 1 2))
-        ;     (caster-index2 (list 1 4 ... (- (length vertex-indices) 1)))
-        ;     (receiver-index2 (list 1 4 ... (- (length vertex-indices) 1)))
-        ; )
+            (*
+                shadowcast-barycentric-coord-2
+                (get ,(symbol-append dim '-vpos-r2)  (get vertex-indices (+ 1 receiver-data)))
+            )
+            (*
+                (- 1 
+                    shadowcast-barycentric-coord-1 
+                    shadowcast-barycentric-coord-2 )
+                (get ,(symbol-append dim '-vpos-r2)  (get vertex-indices (+ 2 receiver-data)))
+            )
+        )
     )
 )
 
@@ -69,13 +62,8 @@
     (= x-vpos-t (- x-vpos x-campos))
     (= y-vpos-t (- y-vpos y-campos))
     (= z-vpos-t (- z-vpos z-campos))
-    (= x-vpos-r1 (- (* x-vpos-t (cos (.x rotation))) (* z-vpos-t (sin (.x rotation)))))
-    (= y-vpos-r1 y-vpos-t)
-    (= z-vpos-r1 (+ (* x-vpos-t (sin (.x rotation))) (* z-vpos-t (cos (.x rotation)))))
-    (= x-vpos-r2 x-vpos-r1)
-    (= y-vpos-r2 (- (* y-vpos-r1 (cos (.y rotation))) (* z-vpos-r1 (sin (.y rotation)))))
-    (= z-vpos-r2 (+ (* y-vpos-r1 (sin (.y rotation))) (* z-vpos-r1 (cos (.y rotation)))))
-
+    ,@(first-person-rotate 'x-vpos-t 'y-vpos-t 'z-vpos-t '(.x rotation) '(.y rotation) 
+        'x-vpos-r2 'y-vpos-r2 'z-vpos-r2)
 
     (= x-normals-r1 x-normals)
     (= y-normals-r1 (- (* y-normals (cos (.y (* -1 rotation)))) (* z-normals (sin (.y (* -1 rotation))))))
@@ -254,14 +242,6 @@
         ) shadowcast-broadphase-filter)
     )
 
-    ; (= shadowcast-positions-x (+ (get x-vpos caster-data) (* light-dir-x (.x shadowcast-data))))
-    ; (= shadowcast-positions-y (+ (get y-vpos caster-data) (* light-dir-y (.x shadowcast-data))))
-    ; (= shadowcast-positions-z (+ (get z-vpos caster-data) (* light-dir-z (.x shadowcast-data))))
-
-    ; (= shadowcast-positions-x-t (- shadowcast-positions-x x-campos))
-    ; (= shadowcast-positions-y-t (- shadowcast-positions-y y-campos))
-    ; (= shadowcast-positions-z-t (- shadowcast-positions-z z-campos))
-
     (= shadowcast-positions (point
         (/ shadowcast-positions-x shadowcast-positions-z)
         (/ shadowcast-positions-y shadowcast-positions-z)
@@ -271,20 +251,6 @@
         (get 
             (list 1 ... (/ (length shadowcast-positions) 3))
             (= 1 (piecewise
-                ; at least two must be positive to have a shadow
-                ; ((> (+ 
-                ;     (piecewise ((> 0 (.x (get shadowcast-data (list 1 4 ... (- (length shadowcast-positions) 1))))) 0) (1))
-                ;     (piecewise ((> 0 (.x (get shadowcast-data (list 2 5 ... (- (length shadowcast-positions) 1))))) 0) (1))
-                ;     (piecewise ((> 0 (.x (get shadowcast-data (list 3 6 ... (- (length shadowcast-positions) 1))))) 0) (1))
-                ; ) 1) 1)
-                ; (0)
-
-                ; version with false negatives
-                ; ((> 0 (.x (get shadowcast-data (list 1 4 ... (- (length shadowcast-positions) 1))))) 0)
-                ; ((> 0 (.x (get shadowcast-data (list 2 5 ... (- (length shadowcast-positions) 1))))) 0) 
-                ; ((> 0 (.x (get shadowcast-data (list 3 6 ... (- (length shadowcast-positions) 1))))) 0)
-                ; (1)
-
                 ; version with false positives
                 ((< 0 (.x (get filtered-shadowcast-data (list 1 4 ... (- (length shadowcast-positions) 1))))) 1)
                 ((< 0 (.x (get filtered-shadowcast-data (list 2 5 ... (- (length shadowcast-positions) 1))))) 1) 
@@ -318,11 +284,6 @@
     ))
 
     (fn (transform-shadowcast-polygon shadowcast-polygon receiver-data-index)
-        ;(
-            ; +
-            ; (* (.x shadowcast-polygon) (get proj-pos (get vertex-indices (+ (get receiver-data receiver-data-index) 1))))
-            ; (* (.y shadowcast-polygon) (get proj-pos (get vertex-indices (+ (get receiver-data receiver-data-index) 2))))
-            ; (* (- 1 (.x shadowcast-polygon) (.y shadowcast-polygon)) (get proj-pos (get vertex-indices (+ (get receiver-data receiver-data-index) 0))))
             (point
                 (/ shadowcast-polygon-x shadowcast-polygon-z)
                 (/ shadowcast-polygon-y shadowcast-polygon-z)
@@ -426,24 +387,13 @@
         (get shadowcast-barycentric-coord-2 shadowcast-coord-filter))
     (= filtered-shadowcast-barycentric-coord-3 
         (get shadowcast-barycentric-coord-3 shadowcast-coord-filter))
-    ;(display
-        ; (= shadowcast-polygons (get (polygon
-        ;     (get shadowcast-positions (list 1 4 ... (length shadowcast-positions)))
-        ;     (get shadowcast-positions (list 2 5 ... (length shadowcast-positions)))
-        ;     (get shadowcast-positions (list 3 6 ... (length shadowcast-positions)))
-        ; ) shadowcast-filter))
-        (= shadowcast-polygons ;(get 
+
+    (= shadowcast-polygons
         
         (for  ;; fix this!
             (polygon 
                 (transform-shadowcast-polygon (eliminate-invalid-shadows
                     (get-triangle-triangle-intersection-polygon
-                        ; (get shadowcast-positions shadowcast-index)
-                        ; (get shadowcast-positions (+ shadowcast-index 1))
-                        ; (get shadowcast-positions (+ shadowcast-index 2))
-                        ; (get proj-pos (get vertex-indices (+ 0 (get receiver-data shadowcast-index))))
-                        ; (get proj-pos (get vertex-indices (+ 1 (get receiver-data shadowcast-index))))
-                        ; (get proj-pos (get vertex-indices (+ 2 (get receiver-data shadowcast-index))))
                         (point 0 0) (point 1 0) (point 0 1)
                         (point
                             (get filtered-shadowcast-barycentric-coord-1 shadowcast-index)
@@ -462,13 +412,7 @@
             )
             (shadowcast-index (list 1 4 ... (- (length filtered-shadowcast-barycentric-coord-1) 1)))
         )
-        
-        ;shadowcast-filter)
     )
-    ;     (color-latex (rgb 0 0 0))
-    ;     (lines #f)
-    ;     (fill-opacity 0.5)
-    ; )
 
     (folder ("Ray-triangle Intersection Formula" #t)
         ,@muller-trumbore-ray-triangle-intersection-formula

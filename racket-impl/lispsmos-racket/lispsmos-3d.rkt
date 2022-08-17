@@ -360,3 +360,20 @@
 (define get-blues (curry get-color-channel 3))
 
 (provide get-alphas get-reds get-greens get-blues)
+
+
+
+
+(define (symbol-append . args)
+    (string->symbol (apply string-append (map symbol->string args))))
+
+(define (first-person-rotate x y z h-angle v-angle x-out y-out z-out)
+    `(
+        (= ,(symbol-append x '-r1) (- (* ,x (cos ,h-angle)) (* ,z (sin ,h-angle))))
+        (= ,(symbol-append z '-r1) (+ (* ,x (sin ,h-angle)) (* ,z (cos ,h-angle))))
+        (= ,x-out ,(symbol-append x '-r1))
+        (= ,y-out (- (* ,y (cos ,v-angle)) (* ,(symbol-append z '-r1) (sin ,v-angle))))
+        (= ,z-out (+ (* ,y (sin ,v-angle)) (* ,(symbol-append z '-r1) (cos ,v-angle))))
+    ))
+
+(provide symbol-append first-person-rotate)
