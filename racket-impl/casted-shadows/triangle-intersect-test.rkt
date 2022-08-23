@@ -15,24 +15,11 @@
     (display (= triangle-point-5 (point 2 0)))
     (display (= triangle-point-6 (point 0 -1)))
 
-    (fn (barycentric-2 p) (to-barycentric
-            (.x p) (.y p)
-            (.x triangle-point-1) (.x triangle-point-2) (.x triangle-point-3)
-            (.y triangle-point-1) (.y triangle-point-2) (.y triangle-point-3)
-             
-             
-        ))
-
-    (= triangle-point-4-2 (barycentric-2 triangle-point-4))
-    (= triangle-point-5-2 (barycentric-2 triangle-point-5))
-    (= triangle-point-6-2 (barycentric-2 triangle-point-6))
-
     (display (polygon triangle-point-1 triangle-point-2 triangle-point-3))
     (display (polygon triangle-point-4 triangle-point-5 triangle-point-6))
-    (display (polygon triangle-point-4-2 triangle-point-5-2 triangle-point-6-2))
     (display (polygon (get-triangle-triangle-intersection-polygon 
-        (point 0 0) (point 1 0) (point 0 1)
-        triangle-point-4-2 triangle-point-5-2 triangle-point-6-2
+        triangle-point-1 triangle-point-2 triangle-point-3
+        triangle-point-4 triangle-point-5 triangle-point-6
     )))
 ))
 

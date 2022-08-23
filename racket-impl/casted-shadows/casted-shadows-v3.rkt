@@ -7,10 +7,10 @@
     "triangle-intersect.rkt")
 
 
-(define scene-obj (open-input-file "scene.obj"))
+(define scene-obj (open-input-file "scene2.obj"))
 (define scene-obj-contents (read-string 9999999 scene-obj))
 
-(define scene-mtl (open-input-file "scene.mtl"))
+(define scene-mtl (open-input-file "scene2.mtl"))
 (define scene-mtl-contents (read-string 9999999 scene-mtl))
 
 (define 3d-col (get-3d-collection (hash
@@ -65,12 +65,14 @@
     ,@(first-person-rotate 'x-vpos-t 'y-vpos-t 'z-vpos-t '(.x rotation) '(.y rotation) 
         'x-vpos-r2 'y-vpos-r2 'z-vpos-r2)
 
-    (= x-normals-r1 x-normals)
-    (= y-normals-r1 (- (* y-normals (cos (.y (* -1 rotation)))) (* z-normals (sin (.y (* -1 rotation))))))
-    (= z-normals-r1 (+ (* y-normals (sin (.y (* -1 rotation)))) (* z-normals (cos (.y (* -1 rotation))))))
-    (= x-normals-r2 (- (* x-normals-r1 (cos (.x (* -1 rotation)))) (* z-normals-r1 (sin (.x (* -1 rotation))))))
-    (= y-normals-r2 y-normals-r1)
-    (= z-normals-r2 (+ (* x-normals-r1 (sin (.x (* -1 rotation)))) (* z-normals-r1 (cos (.x (* -1 rotation))))))
+    ,@(first-person-rotate 'x-normals 'y-normals 'z-normals '(* 1 (.x rotation)) '(* 1 (.y rotation)) 
+        'x-normals-r2 'y-normals-r2 'z-normals-r2)
+    ; (= x-normals-r1 x-normals)
+    ; (= y-normals-r1 (- (* y-normals (cos (.y (* -1 rotation)))) (* z-normals (sin (.y (* -1 rotation))))))
+    ; (= z-normals-r1 (+ (* y-normals (sin (.y (* -1 rotation)))) (* z-normals (cos (.y (* -1 rotation))))))
+    ; (= x-normals-r2 (- (* x-normals-r1 (cos (.x (* -1 rotation)))) (* z-normals-r1 (sin (.x (* -1 rotation))))))
+    ; (= y-normals-r2 y-normals-r1)
+    ; (= z-normals-r2 (+ (* x-normals-r1 (sin (.x (* -1 rotation)))) (* z-normals-r1 (cos (.x (* -1 rotation))))))
 
     (= point-in-triangle-1 (list 1 4 ... (- (length vertex-indices) 1)))
     (= point-in-triangle-2 (list 2 5 ... (- (length vertex-indices) 1)))
@@ -267,73 +269,57 @@
         (/ shadowcast-positions-y shadowcast-positions-z)
     ))
 
-    (= shadowcast-filter 
-        (get 
-            (list 1 ... (/ (length shadowcast-positions) 3))
-            (= 1 (piecewise
-                ; version with false positives
-                ((< 0 (.x (get filtered-shadowcast-data (list 1 4 ... (- (length shadowcast-positions) 1))))) 1)
-                ((< 0 (.x (get filtered-shadowcast-data (list 2 5 ... (- (length shadowcast-positions) 1))))) 1) 
-                ((< 0 (.x (get filtered-shadowcast-data (list 3 6 ... (- (length shadowcast-positions) 1))))) 1)
-                (0)
-            ))
-        )
-    )
-
     (fn (elementwise-mult p1 p2) (point (* (.x p1) (.x p2)) (* (.y p1) (.y p2))))
 
     (= shadowcast-polygon-x (
         +
-        (* (.x shadowcast-polygon) (get x-vpos-r2 (get vertex-indices (+ (get filtered-receiver-data receiver-data-index) 1))))
-        (* (.y shadowcast-polygon) (get x-vpos-r2 (get vertex-indices (+ (get filtered-receiver-data receiver-data-index) 2))))
-        (* (- 1 (.x shadowcast-polygon) (.y shadowcast-polygon)) (get x-vpos-r2 (get vertex-indices (+ (get filtered-receiver-data receiver-data-index) 0))))
+        (* (.x shadowcast-polygon) (get x-vpos-r2 (get vertex-indices (+ (get receiver-data receiver-data-index) 1))))
+        (* (.y shadowcast-polygon) (get x-vpos-r2 (get vertex-indices (+ (get receiver-data receiver-data-index) 2))))
+        (* (- 1 (.x shadowcast-polygon) (.y shadowcast-polygon)) (get x-vpos-r2 (get vertex-indices (+ (get receiver-data receiver-data-index) 0))))
     ))
 
     (= shadowcast-polygon-y (
         +
-        (* (.x shadowcast-polygon) (get y-vpos-r2 (get vertex-indices (+ (get filtered-receiver-data receiver-data-index) 1))))
-        (* (.y shadowcast-polygon) (get y-vpos-r2 (get vertex-indices (+ (get filtered-receiver-data receiver-data-index) 2))))
-        (* (- 1 (.x shadowcast-polygon) (.y shadowcast-polygon)) (get y-vpos-r2 (get vertex-indices (+ (get filtered-receiver-data receiver-data-index) 0))))
+        (* (.x shadowcast-polygon) (get y-vpos-r2 (get vertex-indices (+ (get receiver-data receiver-data-index) 1))))
+        (* (.y shadowcast-polygon) (get y-vpos-r2 (get vertex-indices (+ (get receiver-data receiver-data-index) 2))))
+        (* (- 1 (.x shadowcast-polygon) (.y shadowcast-polygon)) (get y-vpos-r2 (get vertex-indices (+ (get receiver-data receiver-data-index) 0))))
     ))
 
     (= shadowcast-polygon-z (
         +
-        (* (.x shadowcast-polygon) (get z-vpos-r2 (get vertex-indices (+ (get filtered-receiver-data receiver-data-index) 1))))
-        (* (.y shadowcast-polygon) (get z-vpos-r2 (get vertex-indices (+ (get filtered-receiver-data receiver-data-index) 2))))
-        (* (- 1 (.x shadowcast-polygon) (.y shadowcast-polygon)) (get z-vpos-r2 (get vertex-indices (+ (get filtered-receiver-data receiver-data-index) 0))))
+        (* (.x shadowcast-polygon) (get z-vpos-r2 (get vertex-indices (+ (get receiver-data receiver-data-index) 1))))
+        (* (.y shadowcast-polygon) (get z-vpos-r2 (get vertex-indices (+ (get receiver-data receiver-data-index) 2))))
+        (* (- 1 (.x shadowcast-polygon) (.y shadowcast-polygon)) (get z-vpos-r2 (get vertex-indices (+ (get receiver-data receiver-data-index) 0))))
     ))
 
     (fn (transform-shadowcast-polygon shadowcast-polygon receiver-data-index)
-            (point
-                (/ shadowcast-polygon-x shadowcast-polygon-z)
-                (/ shadowcast-polygon-y shadowcast-polygon-z)
-            )
-        ;)
+        (point
+            (/ shadowcast-polygon-x shadowcast-polygon-z)
+            (/ shadowcast-polygon-y shadowcast-polygon-z)
+        )
     )
 
 
-    (= filtered-receiver-data (get receiver-data shadowcast-coord-filter))
-    (= filtered-caster-data (get caster-data shadowcast-coord-filter))
-    (= filtered-caster-indices (get caster-indices shadowcast-coord-filter))
 
-    (= shadow-caster-normal-index (/ (+ 2 (get filtered-caster-indices caster-data-index)) 3))
+
+    (= shadow-caster-normal-index (/ (+ 2 (get caster-indices caster-data-index)) 3))
     (= shadow-caster-normal-x (get x-normals-r2 shadow-caster-normal-index))
     (= shadow-caster-normal-y (get y-normals-r2 shadow-caster-normal-index))
     (= shadow-caster-normal-z (get z-normals-r2 shadow-caster-normal-index))
 
-    (= shadow-caster-vpos-x (get x-vpos-r2 (get vertex-indices (get filtered-caster-indices caster-data-index))))
-    (= shadow-caster-vpos-y (get y-vpos-r2 (get vertex-indices (get filtered-caster-indices caster-data-index))))
-    (= shadow-caster-vpos-z (get z-vpos-r2 (get vertex-indices (get filtered-caster-indices caster-data-index))))
+    (= shadow-caster-vpos-x (get x-vpos-r2 (get vertex-indices (get caster-indices caster-data-index))))
+    (= shadow-caster-vpos-y (get y-vpos-r2 (get vertex-indices (get caster-indices caster-data-index))))
+    (= shadow-caster-vpos-z (get z-vpos-r2 (get vertex-indices (get caster-indices caster-data-index))))
 
     (fn (eliminate-invalid-shadows shadowcast-polygon receiver-data-index caster-data-index)
         (piecewise
-            ((> (max 
+            ((< (min 
                 (+
-                    (* (- shadow-caster-vpos-x shadowcast-polygon-x) light-dir-x-r2)
-                    (* (- shadow-caster-vpos-y shadowcast-polygon-y) light-dir-y-r2)
-                    (* (- shadow-caster-vpos-z shadowcast-polygon-z) light-dir-z-r2)
+                    (* (- shadow-caster-vpos-x shadowcast-polygon-x) shadow-caster-normal-x)
+                    (* (- shadow-caster-vpos-y shadowcast-polygon-y) shadow-caster-normal-y)
+                    (* (- shadow-caster-vpos-z shadowcast-polygon-z) shadow-caster-normal-z)
                 )
-            ) 0.02) (list (point 999 999)))
+            ) -0.01) (list (point 999 999)))
 
             ( shadowcast-polygon)
         )
@@ -370,7 +356,7 @@
         nonshadow-polygon-depths
         (- (get nonshadow-polygon-depths 
             (/ 
-                (+ 2 (get filtered-receiver-data (list 1 4 ... (- (length filtered-receiver-data) 1))))
+                (+ 2 (get receiver-data (list 1 4 ... (- (length receiver-data) 1))))
             3)) 0.1)
     ))
 
@@ -384,29 +370,16 @@
         
             (rgb 
             (* -1 (* 256 
-                ;(list 1 ... (/ (length vertex-indices) 3)) (/ 256 (length vertex-indices) 3)
                 brightnesses
             )) 0 0)
 
             (rgb (* 256 0.5 -1 0
-                (get brightnesses (/ (+ 2 filtered-receiver-data) 3))
+                (get brightnesses (/ (+ 2 receiver-data) 3))
             ) 0 0)
 
         ) (* -1 polygon-depths)))
     )
 
-    (= shadowcast-coord-filter (for
-        (+ -2 (* (get shadowcast-filter shadowcast-filter-index) 3) coord-index)
-        (coord-index (list 0 1 2))
-        (shadowcast-filter-index (list 1 ... (length shadowcast-filter)))
-    ))
-
-    (= filtered-shadowcast-barycentric-coord-1 
-        (get shadowcast-barycentric-coord-1 shadowcast-coord-filter))
-    (= filtered-shadowcast-barycentric-coord-2 
-        (get shadowcast-barycentric-coord-2 shadowcast-coord-filter))
-    (= filtered-shadowcast-barycentric-coord-3 
-        (get shadowcast-barycentric-coord-3 shadowcast-coord-filter))
 
     (= shadowcast-polygons
         
@@ -416,21 +389,21 @@
                     (get-triangle-triangle-intersection-polygon
                         (point 0 0) (point 1 0) (point 0 1)
                         (point
-                            (get filtered-shadowcast-barycentric-coord-1 shadowcast-index)
-                            (get filtered-shadowcast-barycentric-coord-2 shadowcast-index)
+                            (get shadowcast-barycentric-coord-1 shadowcast-index)
+                            (get shadowcast-barycentric-coord-2 shadowcast-index)
                         )
                         (point
-                            (get filtered-shadowcast-barycentric-coord-1 (+ shadowcast-index 1))
-                            (get filtered-shadowcast-barycentric-coord-2 (+ shadowcast-index 1))
+                            (get shadowcast-barycentric-coord-1 (+ shadowcast-index 1))
+                            (get shadowcast-barycentric-coord-2 (+ shadowcast-index 1))
                         )
                         (point
-                            (get filtered-shadowcast-barycentric-coord-1 (+ shadowcast-index 2))
-                            (get filtered-shadowcast-barycentric-coord-2 (+ shadowcast-index 2))
+                            (get shadowcast-barycentric-coord-1 (+ shadowcast-index 2))
+                            (get shadowcast-barycentric-coord-2 (+ shadowcast-index 2))
                         )
                     )
                 shadowcast-index shadowcast-index) shadowcast-index)
             )
-            (shadowcast-index (list 1 4 ... (- (length filtered-shadowcast-barycentric-coord-1) 1)))
+            (shadowcast-index (list 1 4 ... (- (length shadowcast-barycentric-coord-1) 1)))
         )
     )
 
