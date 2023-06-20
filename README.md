@@ -1,5 +1,7 @@
 # LISPsmos
 
+[If you're coming here from that desmos plane video, note that this project has been succeeded by my new language, Desmoscript!](https://github.com/radian628/desmoscript)
+
 [DOCUMENTATION HERE](https://radian628.github.io/lispsmos/)
 
 **Disclaimer: Despite what GitHub says, LISPsmos was not written in Common Lisp. The ".lisp" files are LISPsmos files.**
