@@ -6,6 +6,11 @@ let server = http.createServer(async (req, res) => {
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
     let url = req.url;
+    if (path.normalize(decodeURI(url)) !== decodeURI(url)) {
+        res.statusCode = 403;
+        res.end();
+        return;
+    }
     let fileLocation = path.join(process.cwd(), url);
     fs.readFile(fileLocation)
     .then(file => {
